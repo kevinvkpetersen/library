@@ -4,21 +4,25 @@
 
 package com;
 
-import com.ui.Interface;
+import java.sql.Connection;
 
+import com.ui.LoginWindow;
+
+/**
+ * Entry point for Library database system.
+ * 
+ * @author Kevin Petersen
+ */
 public class Main {
+	public static Connection con;
+	
+	/**
+	 * Entry point. Loads the UI.
+	 * 
+	 * @param args Arguments from the command line
+	 */
 	public static void main(String args[]) {
-		Interface i = new Interface();
-		i.loadDriver();
-		System.out.print("Welcome!");
-		int attempts = 3;
-		while(attempts-- > 0) {
-			if(i.connect()) {
-				i.showMenu();
-				System.exit(0);
-			}
-		}
-		System.exit(-1);
+		new LoginWindow().displayWindow();
 	}
 	
 	

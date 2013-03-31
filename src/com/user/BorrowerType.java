@@ -1,5 +1,5 @@
 /* CPSC 304 - Library Checkout System
- * © Mar. 2013 Kevin Petersen. All rights reserved.
+ * ï¿½ Mar. 2013 Kevin Petersen. All rights reserved.
  */
 
 package com.user;
@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.ui.Interface;
+import com.Main;
 
 /**
  * Representation of a type of borrower as described by BorrowerType in
@@ -20,7 +20,7 @@ import com.ui.Interface;
  * @author Kevin Petersen
  */
 public class BorrowerType {
-	private static Connection con = Interface.con;  
+	private static Connection con = Main.con;  
 	private String type;
 	private int bookTimeLimit;
 
