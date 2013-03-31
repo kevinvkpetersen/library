@@ -20,7 +20,8 @@ import com.Main;
  * @author Kevin Petersen
  */
 public class BorrowerType {
-	private static Connection con = Main.con;  
+	private static Connection con = Main.con;
+	
 	private String type;
 	private int bookTimeLimit;
 
@@ -51,7 +52,8 @@ public class BorrowerType {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	public static BorrowerType addBorrowerType(String key, int bookTimeLimit) throws SQLException {
+	public static BorrowerType addBorrowerType(String key, int bookTimeLimit)
+			throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("INSERT INTO BorrowerType VALUES (?,?)");
 			
@@ -67,7 +69,7 @@ public class BorrowerType {
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			try {
-				// undo the insert
+				// Undo
 				con.rollback();
 			} catch (SQLException sql2) {
 				System.out.println("Message: " + sql2.getMessage());
@@ -133,7 +135,7 @@ public class BorrowerType {
 	}
 
 	/**
-	 * Deletes a type of borrower to the BorrowerType table.
+	 * Deletes a type of borrower from the BorrowerType table.
 	 * 
 	 * @throws SQLException
 	 *             if a database access error occurs; this method is called on a
@@ -143,7 +145,7 @@ public class BorrowerType {
 	public void delete() throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("DELETE FROM BorrowerType WHERE type=?");
-			ps.setString(1, type);
+			ps.setString(1, this.type);
 			
 			ps.executeUpdate();
 			con.commit();
@@ -222,7 +224,8 @@ public class BorrowerType {
 	 */
 	public void setBookTimeLimit(int bookTimeLimit) throws SQLException {
 		try {
-			PreparedStatement ps = con.prepareStatement("UPDATE BorrowerType SET bookTimeLimit=? WHERE type=?");
+			PreparedStatement ps = 
+					con.prepareStatement("UPDATE BorrowerType SET bookTimeLimit=? WHERE type=?");
 			ps.setString(2, this.type);
 			
 			ps.setInt(1, bookTimeLimit);
