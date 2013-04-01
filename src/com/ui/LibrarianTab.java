@@ -4,36 +4,53 @@
 
 package com.ui;
 
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JTextField;
+
+import com.ui.librarian.*;
 
 class LibrarianTab extends JPanel {
-	private static final long serialVersionUID = -2359671998669762596L;
+	private static final long serialVersionUID = -1645948987147921182L;
 	
 	private GridBagLayout gb = new GridBagLayout();
 	private GridBagConstraints c = new GridBagConstraints();
 	
-	private JTextField usernameField = new JTextField(10);
-	private JPasswordField passwordField = new JPasswordField(10);
+	private ActionListener newBookAction = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			new NewBook().displayWindow();
+		}
+	};
+	private ActionListener checkedOutAction = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			new CheckedOut().displayWindow();
+		}
+	};
+	private ActionListener popularAction = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			new Popular().displayWindow();
+		}
+	};
 	
-
+	private static final int BUTTON_HEIGHT = MainMenu.BUTTON_HEIGHT;
+	private static final int BUTTON_WIDTH = MainMenu.BUTTON_WIDTH;
+	
 	/**
 	 * Builds the components and does any initialization for the window
 	 */
 	LibrarianTab() {
 		super(false);
 		initializePane();
-		addUserName();
-		addPassword();
-		addButton();
+		addNewBookButton();
+		addCheckedOutButton();
+		addPopularButton();
 	}
 	
 	/**
@@ -43,54 +60,49 @@ class LibrarianTab extends JPanel {
 		this.setLayout(gb);
 		this.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 	}
-	
-	/**
-	 * Builds the username field and label and adds them to the window 
-	 */
-	private void addUserName() {
-		// Place the username label
-		JLabel usernameLabel = new JLabel("Enter Librarian name: ");
-		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(10, 10, 5, 0);
-		gb.setConstraints(usernameLabel, c);
-		this.add(usernameLabel);
 
-		// Place the text field for the username
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(10, 0, 5, 10);
-		gb.setConstraints(usernameField, c);
-		this.add(usernameField);
-	}
-	
 	/**
-	 * Builds the password field and label and adds them to the window 
+	 * Builds the new book button and adds it to the window 
 	 */
-	private void addPassword() {
-		// Place password label
-		JLabel passwordLabel = new JLabel("Enter password: ");
+	private void addNewBookButton() {
+		// Place the new book button
+		JButton button = new JButton("Add a Book");
+		button.setPreferredSize(new Dimension(BUTTON_WIDTH, BUTTON_HEIGHT));
 		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(0, 10, 10, 0);
-		gb.setConstraints(passwordLabel, c);
-		this.add(passwordLabel);
-
-		// Place the password field
-		passwordField.setEchoChar('*');
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(0, 0, 10, 10);
-		gb.setConstraints(passwordField, c);
-		this.add(passwordField);
+		c.insets = new Insets(10, 10, 5, 5);
+		c.anchor = GridBagConstraints.CENTER;
+		gb.setConstraints(button, c);
+		this.add(button);
+		button.addActionListener(this.newBookAction);
 	}
 
 	/**
-	 * Builds the login button and adds it to the window 
+	 * Builds the checked out button and adds it to the window 
 	 */
-	private void addButton() {
-		// Place the login button
-		JButton loginButton = new JButton("Log In");
+	private void addCheckedOutButton() {
+		// Place the checked out button
+		JButton button = new JButton("Checked Out Books");
+		button.setPreferredSize(new Dimension(BUTTON_WIDTH, BUTTON_HEIGHT));
+		c.gridwidth = GridBagConstraints.REMAINDER;
+		c.insets = new Insets(10, 5, 5, 10);
+		c.anchor = GridBagConstraints.CENTER;
+		gb.setConstraints(button, c);
+		this.add(button);
+		button.addActionListener(this.checkedOutAction);
+	}
+
+	/**
+	 * Builds the popular button and adds it to the window 
+	 */
+	private void addPopularButton() {
+		// Place the popular button
+		JButton button = new JButton("Popular Books");
+		button.setPreferredSize(new Dimension(BUTTON_WIDTH, BUTTON_HEIGHT));
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(5, 10, 10, 10);
 		c.anchor = GridBagConstraints.CENTER;
-		gb.setConstraints(loginButton, c);
-		this.add(loginButton);
+		gb.setConstraints(button, c);
+		this.add(button);
+		button.addActionListener(this.popularAction);
 	}
 }

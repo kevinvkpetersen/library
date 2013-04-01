@@ -8,10 +8,17 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-import javax.swing.*;
-import java.awt.event.*;
-import com.ui.clerk.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JPanel;
+
+import com.ui.clerk.Checkout;
+import com.ui.clerk.NewBorrower;
+import com.ui.clerk.Overdue;
+import com.ui.clerk.Return;
 
 class ClerkTab extends JPanel {
 	private static final long serialVersionUID = -2359671998669762596L;
@@ -21,12 +28,12 @@ class ClerkTab extends JPanel {
 	
 	private ActionListener checkoutAction = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
-			
+			new Checkout().displayWindow();
 		}
 	};
 	private ActionListener returnAction = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
-			
+			new Return().displayWindow();
 		}
 	};
 	private ActionListener newBorrowerAction = new ActionListener() {
@@ -36,7 +43,7 @@ class ClerkTab extends JPanel {
 	};
 	private ActionListener overdueAction = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
-			
+			new Overdue().displayWindow();
 		}
 	};
 	
