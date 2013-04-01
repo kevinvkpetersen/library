@@ -16,17 +16,11 @@ import java.awt.event.WindowEvent;
 import java.sql.Date;
 import java.sql.SQLException;
 
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.*;
-import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JTextField;
 
+import com.borrower.Borrower;
+import com.borrower.BorrowerType;
 import com.date.DateParser;
-import com.user.Borrower;
-import com.user.BorrowerType;
 
 /**
  * This class implements a graphical login window to connect to the Oracle

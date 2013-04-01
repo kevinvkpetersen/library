@@ -2,7 +2,7 @@
  * © Mar. 2013 Kevin Petersen. All rights reserved.
  */
 
-package com.book;
+package com.book.records;
 
 import java.sql.Connection;
 import java.sql.Date;
@@ -13,79 +13,75 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.Main;
+import com.book.Book;
+import com.borrower.Borrower;
 
 /**
- * Representation of a fine as described by Fine in tables.sql.
+ * Representation of a hold request as described by HoldRequest in tables.sql.
  * 
  * @author Kevin Petersen
  */
-public class Fine {
+public class HoldRequest {
 	private static Connection con = Main.con;  
 	
-	private int fid;
-	private float amount;
+	private int hid;
+	private Borrower bid;
+	private Book callNumber;
 	private Date issuedDate;
-	private Date paidDate;
-	private Borrowing borid;
-	
+	 
 	/**
 	 * Constructor used only by this class to enforce an instance being a valid
-	 * entry in the Fine table
+	 * entry in the HoldRequest table
 	 * 
-	 * @param fid
-	 *            Primary key id number for this fine
-	 * @param amount
-	 *            Amount owed
+	 * @param hid
+	 *            Primary key id number for this hold request
+	 * @param bid
+	 *            Borrower that requested the hold
+	 * @param callNumber
+	 *            Book to be held
 	 * @param issuedDate
-	 *            Date charged
-	 * @param paidDate
-	 *            Date paid
-	 * @param borid
-	 *            Borrow that caused fine
+	 *            Date hold was issued
 	 */
-	private Fine(int fid, float amount, Date issuedDate, Date paidDate, Borrowing borid) {
-		this.fid = fid;
-		this.amount = amount;
+	private HoldRequest(int hid, Borrower bid, Book callNumber, Date issuedDate) {
+		this.hid = hid;
+		this.bid = bid;
+		this.callNumber = callNumber;
 		this.issuedDate = issuedDate;
-		this.paidDate = paidDate;
-		this.borid = borid;
 	}
 	
 	/**
-	 * Add a fine to the Fine table.
+	 * Add a hold to the HoldRequest table.
 	 * 
-	 * @param fid
-	 *            Primary key id number for this fine
-	 * @param amount
-	 *            Amount owed
+	 * @param hid
+	 *            Primary key id number for this hold request
+	 * @param bid
+	 *            Borrower that requested the hold
+	 * @param callNumber
+	 *            Book to be held
 	 * @param issuedDate
-	 *            Date charged
-	 * @param paidDate
-	 *            Date paid
-	 * @param borid
-	 *            Borrow that caused fine
+	 *            Date hold was issued
 	 * @return Object representing the newly created entry
 	 * @throws SQLException
 	 *             if a database access error occurs; this method is called on a
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	public static Fine addFine(int fid, float amount, Date issuedDate, Date paidDate, Borrowing borid) throws SQLException {
+	public static HoldRequest addHoldRequest(int hid, Borrower bid,
+			Book callNumber, Date issuedDate) throws SQLException {
 		try {
-			PreparedStatement ps = con.prepareStatement("INSERT INTO Fine VALUES (?,?,?,?,?)");
+			PreparedStatement ps = con.prepareStatement("INSERT INTO HoldRequest VALUES (?,?,?,?)");
 			
-			ps.setInt(1, fid);
-			ps.setFloat(2, amount);
-			ps.setDate(3, issuedDate);
-			ps.setDate(4, paidDate);
-			ps.setInt(5, borid.getBorid());
+			ps.setInt(1, hid);
+			ps.setInt(2, bid.getBid());
+			ps.setInt(3, callNumber.getCallNumber());
+			ps.setDate(4, issuedDate);
 			
 			// All inputs are OK
 			ps.executeUpdate();
 			con.commit();
 			ps.close();
 			
-			return new Fine(fid, amount, issuedDate, paidDate, borid);
+			return new HoldRequest(hid, bid, callNumber, issuedDate);
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			try {
@@ -100,20 +96,20 @@ public class Fine {
 	}
 	
 	/**
-	 * Looks up the entry for the given key in the Fine table and returns
+	 * Looks up the entry for the given key in the HoldRequest table and returns
 	 * the corresponding object.
 	 * 
 	 * @param key
 	 *            The primary key used to look up the entry
-	 * @return A Fine object representing the entry with the given key
+	 * @return A HoldRequest object representing the entry with the given key
 	 * @throws SQLException
 	 *             if a database access error occurs; this method is called on a
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static Fine getFine(int key) throws SQLException {
+	public static HoldRequest getHoldRequest(int key) throws SQLException {
 		try {
-			PreparedStatement ps = con.prepareStatement("SELECT * FROM Fine WHERE fid=?");
+			PreparedStatement ps = con.prepareStatement("SELECT * FROM HoldRequest WHERE hid=?");
 			ps.setInt(1, key);
 			
 			ps.setMaxRows(1);
@@ -128,26 +124,26 @@ public class Fine {
 	}
 
 	/**
-	 * Looks up all the entries in the Fine table and returns the corresponding
+	 * Looks up all the entries in the HoldRequest table and returns the corresponding
 	 * objects in a list.
 	 * 
-	 * @return A List of Fine objects representing the entries of the Fine table
+	 * @return A List of HoldRequest objects representing the entries of the HoldRequest table
 	 * @throws SQLException
 	 *             if a database access error occurs; this method is called on a
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static List<Fine> getAllFines() throws SQLException {
+	public static List<HoldRequest> getAllHoldRequests() throws SQLException {
 		try {
-			PreparedStatement ps = con.prepareStatement("SELECT * FROM Fine");
+			PreparedStatement ps = con.prepareStatement("SELECT * FROM HoldRequest");
 			ResultSet r = ps.executeQuery();
-			List<Fine> allFines = new ArrayList<Fine>();
+			List<HoldRequest> allHoldRequests = new ArrayList<HoldRequest>();
 			
 			while(r.next()) {
-				allFines.add(parseLine(r));
+				allHoldRequests.add(parseLine(r));
 			}
 			
-			return allFines;
+			return allHoldRequests;
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			throw sql;
@@ -156,27 +152,26 @@ public class Fine {
 	
 	/**
 	 * Reads the data from the current row in the result set and generates the
-	 * corresponding Fine object
+	 * corresponding HoldRequest object
 	 * 
 	 * @param r
 	 *            Result Set of a query
-	 * @return The fine represented by the current row of data
+	 * @return The hold request represented by the current row of data
 	 * @throws SQLException
 	 *             if the columnLabel is not valid; if a database access error
 	 *             occurs or this method is called on a closed result set
 	 */
-	private static Fine parseLine(ResultSet r) throws SQLException {
-		int fid = r.getInt("fid");
-		float amount = r.getFloat("amount");
+	private static HoldRequest parseLine(ResultSet r) throws SQLException {
+		int hid = r.getInt("hid");
+		Borrower bid = Borrower.getBorrower(r.getInt("bid"));
+		Book callNumber = Book.getBook(r.getInt("callNumber"));
 		Date issuedDate = r.getDate("issuedDate");
-		Date paidDate = r.getDate("paidDate");
-		Borrowing borid = Borrowing.getBorrowing(r.getInt("borid"));
 		
-		return new Fine(fid, amount, issuedDate, paidDate, borid);
+		return new HoldRequest(hid, bid, callNumber, issuedDate);
 	}
 
 	/**
-	 * Deletes a fine from the Fine table.
+	 * Deletes a hold request from the HoldRequest table.
 	 * 
 	 * @throws SQLException
 	 *             if a database access error occurs; this method is called on a
@@ -185,8 +180,8 @@ public class Fine {
 	 */
 	public void delete() throws SQLException {
 		try {
-			PreparedStatement ps = con.prepareStatement("DELETE FROM Fine WHERE fid=?");
-			ps.setInt(1, this.fid);
+			PreparedStatement ps = con.prepareStatement("DELETE FROM HoldRequest WHERE hid=?");
+			ps.setInt(1, this.hid);
 			
 			ps.executeUpdate();
 			con.commit();
@@ -205,34 +200,34 @@ public class Fine {
 	}
 
 	/**
-	 * @return Primary key id number for this fine
+	 * @return Primary key id number for this hold request
 	 */
-	public int getFid() {
-		return this.fid;
+	public int getHid() {
+		return this.hid;
 	}
 
 	/**
-	 * Updates this object and the Fine table
+	 * Updates this object and the HoldRequest table
 	 * 
-	 * @param fid
-	 *            Primary key id number for this fine
+	 * @param hid
+	 *            Primary key id number for this hold request
 	 * @throws SQLException
 	 *             if a database access error occurs; this method is called on a
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	public void setFid(int fid) throws SQLException {
+	public void setHid(int hid) throws SQLException {
 		try {
-			PreparedStatement ps = con.prepareStatement("UPDATE Fine SET fid=? WHERE fid=?");
-			ps.setInt(2, this.fid);
+			PreparedStatement ps = con.prepareStatement("UPDATE HoldRequest SET hid=? WHERE hid=?");
+			ps.setInt(2, this.hid);
 			
-			ps.setInt(1, fid);
+			ps.setInt(1, hid);
 			
 			ps.executeUpdate();
 			con.commit();
 			ps.close();
 			
-			this.fid = fid;
+			this.hid = hid;
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			try {
@@ -247,34 +242,34 @@ public class Fine {
 	}
 
 	/**
-	 * @return Amount owed
+	 * @return Borrower that requested the hold
 	 */
-	public float getAmount() {
-		return this.amount;
+	public Borrower getBid() {
+		return this.bid;
 	}
 
 	/**
-	 * Updates this object and the Fine table
+	 * Updates this object and the HoldRequest table
 	 * 
-	 * @param amount
-	 *            Amount owed
+	 * @param bid
+	 *            Borrower that requested the hold
 	 * @throws SQLException
 	 *             if a database access error occurs; this method is called on a
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	public void setAmount(float amount) throws SQLException {
+	public void setBid(Borrower bid) throws SQLException {
 		try {
-			PreparedStatement ps = con.prepareStatement("UPDATE Fine SET amount=? WHERE fid=?");
-			ps.setInt(2, this.fid);
+			PreparedStatement ps = con.prepareStatement("UPDATE HoldRequest SET bid=? WHERE hid=?");
+			ps.setInt(2, this.hid);
 			
-			ps.setFloat(1, amount);
+			ps.setInt(1, bid.getBid());
 			
 			ps.executeUpdate();
 			con.commit();
 			ps.close();
 			
-			this.amount = amount;
+			this.bid = bid;
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			try {
@@ -289,17 +284,59 @@ public class Fine {
 	}
 
 	/**
-	 * @return Date charged
+	 * @return Book to be held
+	 */
+	public Book getCallNumber() {
+		return this.callNumber;
+	}
+
+	/**
+	 * Updates this object and the HoldRequest table
+	 * 
+	 * @param callNumber
+	 *            Book to be held
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement returns a
+	 *             ResultSet object
+	 */
+	public void setCallNumber(Book callNumber) throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("UPDATE HoldRequest SET callNumber=? WHERE hid=?");
+			ps.setInt(2, this.hid);
+			
+			ps.setInt(1, callNumber.getCallNumber());
+			
+			ps.executeUpdate();
+			con.commit();
+			ps.close();
+			
+			this.callNumber = callNumber;
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			try {
+				// Undo
+				con.rollback();
+			} catch (SQLException sql2) {
+				System.out.println("Message: " + sql2.getMessage());
+				System.exit(-1);
+			}
+			throw sql;
+		}
+	}
+
+	/**
+	 * @return Date hold was issued
 	 */
 	public Date getIssuedDate() {
 		return this.issuedDate;
 	}
 
 	/**
-	 * Updates this object and the Fine table
+	 * Updates this object and the HoldRequest table
 	 * 
 	 * @param issuedDate
-	 *            Date charged
+	 *            Date hold was issued
 	 * @throws SQLException
 	 *             if a database access error occurs; this method is called on a
 	 *             closed PreparedStatement or the SQL statement returns a
@@ -307,8 +344,8 @@ public class Fine {
 	 */
 	public void setIssuedDate(Date issuedDate) throws SQLException {
 		try {
-			PreparedStatement ps = con.prepareStatement("UPDATE Fine SET issuedDate=? WHERE fid=?");
-			ps.setInt(2, this.fid);
+			PreparedStatement ps = con.prepareStatement("UPDATE HoldRequest SET issuedDate=? WHERE hid=?");
+			ps.setInt(2, this.hid);
 			
 			ps.setDate(1, issuedDate);
 			
@@ -317,90 +354,6 @@ public class Fine {
 			ps.close();
 			
 			this.issuedDate = issuedDate;
-		} catch (SQLException sql) {
-			System.out.println("Message: " + sql.getMessage());
-			try {
-				// Undo
-				con.rollback();
-			} catch (SQLException sql2) {
-				System.out.println("Message: " + sql2.getMessage());
-				System.exit(-1);
-			}
-			throw sql;
-		}
-	}
-
-	/**
-	 * @return Date paid
-	 */
-	public Date getPaidDate() {
-		return this.paidDate;
-	}
-
-	/**
-	 * Updates this object and the Fine table
-	 * 
-	 * @param paidDate
-	 *            Date paid
-	 * @throws SQLException
-	 *             if a database access error occurs; this method is called on a
-	 *             closed PreparedStatement or the SQL statement returns a
-	 *             ResultSet object
-	 */
-	public void setPaidDate(Date paidDate) throws SQLException {
-		try {
-			PreparedStatement ps = con.prepareStatement("UPDATE Fine SET paidDate=? WHERE fid=?");
-			ps.setInt(2, this.fid);
-			
-			ps.setDate(1, paidDate);
-			
-			ps.executeUpdate();
-			con.commit();
-			ps.close();
-			
-			this.paidDate = paidDate;
-		} catch (SQLException sql) {
-			System.out.println("Message: " + sql.getMessage());
-			try {
-				// Undo
-				con.rollback();
-			} catch (SQLException sql2) {
-				System.out.println("Message: " + sql2.getMessage());
-				System.exit(-1);
-			}
-			throw sql;
-		}
-	}
-
-	/**
-	 * @return Borrow that caused fine
-	 */
-	public Borrowing getBorid() {
-		return this.borid;
-	}
-
-	/**
-	 * Updates this object and the Fine table
-	 * 
-	 * @param borid
-	 *            Borrow that caused fine
-	 * @throws SQLException
-	 *             if a database access error occurs; this method is called on a
-	 *             closed PreparedStatement or the SQL statement returns a
-	 *             ResultSet object
-	 */
-	public void setBorid(Borrowing borid) throws SQLException {
-		try {
-			PreparedStatement ps = con.prepareStatement("UPDATE Fine SET borid=? WHERE fid=?");
-			ps.setInt(2, this.fid);
-			
-			ps.setInt(1, borid.getBorid());
-			
-			ps.executeUpdate();
-			con.commit();
-			ps.close();
-			
-			this.borid = borid;
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			try {

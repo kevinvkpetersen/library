@@ -2,7 +2,7 @@
  * © Mar. 2013 Kevin Petersen. All rights reserved.
  */
 
-package com.user;
+package com.borrower;
 
 import java.sql.Connection;
 import java.sql.Date;

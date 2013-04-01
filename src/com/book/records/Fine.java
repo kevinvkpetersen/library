@@ -2,7 +2,7 @@
  * © Mar. 2013 Kevin Petersen. All rights reserved.
  */
 
-package com.book;
+package com.book.records;
 
 import java.sql.Connection;
 import java.sql.Date;
@@ -13,82 +13,79 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.Main;
-import com.user.Borrower;
 
 /**
- * Representation of a borrow as described by Borrowing in tables.sql.
+ * Representation of a fine as described by Fine in tables.sql.
  * 
  * @author Kevin Petersen
  */
-public class Borrowing {
+public class Fine {
 	private static Connection con = Main.con;  
 	
-	private int borid;
-	private Borrower bid;
-	private BookCopy callNumber;
-	private Date outDate;
-	private Date inDate;
-	 
+	private int fid;
+	private float amount;
+	private Date issuedDate;
+	private Date paidDate;
+	private Borrowing borid;
+	
 	/**
 	 * Constructor used only by this class to enforce an instance being a valid
-	 * entry in the Borrowing table
+	 * entry in the Fine table
 	 * 
+	 * @param fid
+	 *            Primary key id number for this fine
+	 * @param amount
+	 *            Amount owed
+	 * @param issuedDate
+	 *            Date charged
+	 * @param paidDate
+	 *            Date paid
 	 * @param borid
-	 *            Primary key id number for this borrow
-	 * @param bid
-	 *            Borrower that borrowed the book
-	 * @param callNumber
-	 *            Book that was borrowed
-	 * @param outDate
-	 *            Date borrowed
-	 * @param inDate
-	 *            Date returned
+	 *            Borrow that caused fine
 	 */
-	private Borrowing(int borid, Borrower bid, BookCopy callNumber, Date outDate, Date inDate) {
+	private Fine(int fid, float amount, Date issuedDate, Date paidDate, Borrowing borid) {
+		this.fid = fid;
+		this.amount = amount;
+		this.issuedDate = issuedDate;
+		this.paidDate = paidDate;
 		this.borid = borid;
-		this.bid = bid;
-		this.callNumber = callNumber;
-		this.outDate = outDate;
-		this.inDate = inDate;
 	}
 	
 	/**
-	 * Add a borrow record to the Borrowing table.
+	 * Add a fine to the Fine table.
 	 * 
+	 * @param fid
+	 *            Primary key id number for this fine
+	 * @param amount
+	 *            Amount owed
+	 * @param issuedDate
+	 *            Date charged
+	 * @param paidDate
+	 *            Date paid
 	 * @param borid
-	 *            Primary key id number for this borrow
-	 * @param bid
-	 *            Borrower that borrowed the book
-	 * @param callNumber
-	 *            Book that was borrowed
-	 * @param outDate
-	 *            Date borrowed
-	 * @param inDate
-	 *            Date returned
+	 *            Borrow that caused fine
 	 * @return Object representing the newly created entry
 	 * @throws SQLException
 	 *             if a database access error occurs; this method is called on a
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	public static Borrowing addBorrowing(int borid, Borrower bid,
-			BookCopy callNumber, Date outDate, Date inDate) throws SQLException {
+	public static Fine addFine(int fid, float amount, Date issuedDate, Date paidDate, Borrowing borid) throws SQLException {
 		try {
-			PreparedStatement ps = con.prepareStatement("INSERT INTO Borrowing VALUES (?,?,?,?,?,?)");
+			PreparedStatement ps = con.prepareStatement("INSERT INTO Fine VALUES (?,?,?,?,?)");
 			
-			ps.setInt(1, borid);
-			ps.setInt(2, bid.getBid());
-			ps.setInt(3, callNumber.getCallNumber().getCallNumber());
-			ps.setInt(4, callNumber.getCopyNo());
-			ps.setDate(5, outDate);
-			ps.setDate(6, inDate);
+			ps.setInt(1, fid);
+			ps.setFloat(2, amount);
+			ps.setDate(3, issuedDate);
+			ps.setDate(4, paidDate);
+			ps.setInt(5, borid.getBorid());
 			
 			// All inputs are OK
 			ps.executeUpdate();
 			con.commit();
 			ps.close();
 			
-			return new Borrowing(borid, bid, callNumber, outDate, inDate);
+			return new Fine(fid, amount, issuedDate, paidDate, borid);
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			try {
@@ -103,20 +100,20 @@ public class Borrowing {
 	}
 	
 	/**
-	 * Looks up the entry for the given key in the Borrowing table and returns
+	 * Looks up the entry for the given key in the Fine table and returns
 	 * the corresponding object.
 	 * 
 	 * @param key
 	 *            The primary key used to look up the entry
-	 * @return A Borrowing object representing the entry with the given key
+	 * @return A Fine object representing the entry with the given key
 	 * @throws SQLException
 	 *             if a database access error occurs; this method is called on a
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static Borrowing getBorrowing(int key) throws SQLException {
+	public static Fine getFine(int key) throws SQLException {
 		try {
-			PreparedStatement ps = con.prepareStatement("SELECT * FROM Borrowing WHERE borid=?");
+			PreparedStatement ps = con.prepareStatement("SELECT * FROM Fine WHERE fid=?");
 			ps.setInt(1, key);
 			
 			ps.setMaxRows(1);
@@ -131,26 +128,26 @@ public class Borrowing {
 	}
 
 	/**
-	 * Looks up all the entries in the Borrowing table and returns the corresponding
+	 * Looks up all the entries in the Fine table and returns the corresponding
 	 * objects in a list.
 	 * 
-	 * @return A List of Borrowing objects representing the entries of the Borrowing table
+	 * @return A List of Fine objects representing the entries of the Fine table
 	 * @throws SQLException
 	 *             if a database access error occurs; this method is called on a
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static List<Borrowing> getAllBorrowings() throws SQLException {
+	public static List<Fine> getAllFines() throws SQLException {
 		try {
-			PreparedStatement ps = con.prepareStatement("SELECT * FROM Borrowing");
+			PreparedStatement ps = con.prepareStatement("SELECT * FROM Fine");
 			ResultSet r = ps.executeQuery();
-			List<Borrowing> allBorrowings = new ArrayList<Borrowing>();
+			List<Fine> allFines = new ArrayList<Fine>();
 			
 			while(r.next()) {
-				allBorrowings.add(parseLine(r));
+				allFines.add(parseLine(r));
 			}
 			
-			return allBorrowings;
+			return allFines;
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			throw sql;
@@ -159,30 +156,27 @@ public class Borrowing {
 	
 	/**
 	 * Reads the data from the current row in the result set and generates the
-	 * corresponding Borrowing object
+	 * corresponding Fine object
 	 * 
 	 * @param r
 	 *            Result Set of a query
-	 * @return The borrow represented by the current row of data
+	 * @return The fine represented by the current row of data
 	 * @throws SQLException
 	 *             if the columnLabel is not valid; if a database access error
 	 *             occurs or this method is called on a closed result set
 	 */
-	private static Borrowing parseLine(ResultSet r) throws SQLException {
-		int borid = r.getInt("borid");
-		Borrower bid = Borrower.getBorrower(r.getInt("bid"));
+	private static Fine parseLine(ResultSet r) throws SQLException {
+		int fid = r.getInt("fid");
+		float amount = r.getFloat("amount");
+		Date issuedDate = r.getDate("issuedDate");
+		Date paidDate = r.getDate("paidDate");
+		Borrowing borid = Borrowing.getBorrowing(r.getInt("borid"));
 		
-		Book b = Book.getBook(r.getInt("callNumber"));
-		BookCopy callNumber = BookCopy.getBookCopy(b, r.getInt("copyNo"));
-		
-		Date outDate = r.getDate("outDate");
-		Date inDate = r.getDate("inDate");
-		
-		return new Borrowing(borid, bid, callNumber, outDate, inDate);
+		return new Fine(fid, amount, issuedDate, paidDate, borid);
 	}
 
 	/**
-	 * Deletes a borrow from the Borrowing table.
+	 * Deletes a fine from the Fine table.
 	 * 
 	 * @throws SQLException
 	 *             if a database access error occurs; this method is called on a
@@ -191,8 +185,8 @@ public class Borrowing {
 	 */
 	public void delete() throws SQLException {
 		try {
-			PreparedStatement ps = con.prepareStatement("DELETE FROM Borrowing WHERE borid=?");
-			ps.setInt(1, this.borid);
+			PreparedStatement ps = con.prepareStatement("DELETE FROM Fine WHERE fid=?");
+			ps.setInt(1, this.fid);
 			
 			ps.executeUpdate();
 			con.commit();
@@ -211,203 +205,202 @@ public class Borrowing {
 	}
 
 	/**
-	 * @return Primary key id number for this borrow
+	 * @return Primary key id number for this fine
 	 */
-	public int getBorid() {
-		return this.borid;
+	public int getFid() {
+		return this.fid;
 	}
 
 	/**
-	 * Updates this object and the Borrowing table
+	 * Updates this object and the Fine table
 	 * 
-	 * @param borid
-	 *            Primary key id number for this borrow
+	 * @param fid
+	 *            Primary key id number for this fine
 	 * @throws SQLException
 	 *             if a database access error occurs; this method is called on a
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	public void setBorid(int borid) throws SQLException {
+	public void setFid(int fid) throws SQLException {
 		try {
-			PreparedStatement ps = con.prepareStatement("UPDATE Borrowing SET borid=? WHERE borid=?");
-			ps.setInt(2, this.borid);
+			PreparedStatement ps = con.prepareStatement("UPDATE Fine SET fid=? WHERE fid=?");
+			ps.setInt(2, this.fid);
 			
-			ps.setInt(1, borid);
+			ps.setInt(1, fid);
+			
+			ps.executeUpdate();
+			con.commit();
+			ps.close();
+			
+			this.fid = fid;
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			try {
+				// Undo
+				con.rollback();
+			} catch (SQLException sql2) {
+				System.out.println("Message: " + sql2.getMessage());
+				System.exit(-1);
+			}
+			throw sql;
+		}
+	}
+
+	/**
+	 * @return Amount owed
+	 */
+	public float getAmount() {
+		return this.amount;
+	}
+
+	/**
+	 * Updates this object and the Fine table
+	 * 
+	 * @param amount
+	 *            Amount owed
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement returns a
+	 *             ResultSet object
+	 */
+	public void setAmount(float amount) throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("UPDATE Fine SET amount=? WHERE fid=?");
+			ps.setInt(2, this.fid);
+			
+			ps.setFloat(1, amount);
+			
+			ps.executeUpdate();
+			con.commit();
+			ps.close();
+			
+			this.amount = amount;
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			try {
+				// Undo
+				con.rollback();
+			} catch (SQLException sql2) {
+				System.out.println("Message: " + sql2.getMessage());
+				System.exit(-1);
+			}
+			throw sql;
+		}
+	}
+
+	/**
+	 * @return Date charged
+	 */
+	public Date getIssuedDate() {
+		return this.issuedDate;
+	}
+
+	/**
+	 * Updates this object and the Fine table
+	 * 
+	 * @param issuedDate
+	 *            Date charged
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement returns a
+	 *             ResultSet object
+	 */
+	public void setIssuedDate(Date issuedDate) throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("UPDATE Fine SET issuedDate=? WHERE fid=?");
+			ps.setInt(2, this.fid);
+			
+			ps.setDate(1, issuedDate);
+			
+			ps.executeUpdate();
+			con.commit();
+			ps.close();
+			
+			this.issuedDate = issuedDate;
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			try {
+				// Undo
+				con.rollback();
+			} catch (SQLException sql2) {
+				System.out.println("Message: " + sql2.getMessage());
+				System.exit(-1);
+			}
+			throw sql;
+		}
+	}
+
+	/**
+	 * @return Date paid
+	 */
+	public Date getPaidDate() {
+		return this.paidDate;
+	}
+
+	/**
+	 * Updates this object and the Fine table
+	 * 
+	 * @param paidDate
+	 *            Date paid
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement returns a
+	 *             ResultSet object
+	 */
+	public void setPaidDate(Date paidDate) throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("UPDATE Fine SET paidDate=? WHERE fid=?");
+			ps.setInt(2, this.fid);
+			
+			ps.setDate(1, paidDate);
+			
+			ps.executeUpdate();
+			con.commit();
+			ps.close();
+			
+			this.paidDate = paidDate;
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			try {
+				// Undo
+				con.rollback();
+			} catch (SQLException sql2) {
+				System.out.println("Message: " + sql2.getMessage());
+				System.exit(-1);
+			}
+			throw sql;
+		}
+	}
+
+	/**
+	 * @return Borrow that caused fine
+	 */
+	public Borrowing getBorid() {
+		return this.borid;
+	}
+
+	/**
+	 * Updates this object and the Fine table
+	 * 
+	 * @param borid
+	 *            Borrow that caused fine
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement returns a
+	 *             ResultSet object
+	 */
+	public void setBorid(Borrowing borid) throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("UPDATE Fine SET borid=? WHERE fid=?");
+			ps.setInt(2, this.fid);
+			
+			ps.setInt(1, borid.getBorid());
 			
 			ps.executeUpdate();
 			con.commit();
 			ps.close();
 			
 			this.borid = borid;
-		} catch (SQLException sql) {
-			System.out.println("Message: " + sql.getMessage());
-			try {
-				// Undo
-				con.rollback();
-			} catch (SQLException sql2) {
-				System.out.println("Message: " + sql2.getMessage());
-				System.exit(-1);
-			}
-			throw sql;
-		}
-	}
-
-	/**
-	 * @return Borrower that borrowed the book
-	 */
-	public Borrower getBid() {
-		return this.bid;
-	}
-
-	/**
-	 * Updates this object and the Borrowing table
-	 * 
-	 * @param bid
-	 *            Borrower that borrowed the book
-	 * @throws SQLException
-	 *             if a database access error occurs; this method is called on a
-	 *             closed PreparedStatement or the SQL statement returns a
-	 *             ResultSet object
-	 */
-	public void setBid(Borrower bid) throws SQLException {
-		try {
-			PreparedStatement ps = con.prepareStatement("UPDATE Borrowing SET bid=? WHERE borid=?");
-			ps.setInt(2, this.borid);
-			
-			ps.setInt(1, bid.getBid());
-			
-			ps.executeUpdate();
-			con.commit();
-			ps.close();
-			
-			this.bid = bid;
-		} catch (SQLException sql) {
-			System.out.println("Message: " + sql.getMessage());
-			try {
-				// Undo
-				con.rollback();
-			} catch (SQLException sql2) {
-				System.out.println("Message: " + sql2.getMessage());
-				System.exit(-1);
-			}
-			throw sql;
-		}
-	}
-
-	/**
-	 * @return Book that was borrowed
-	 */
-	public BookCopy getCallNumber() {
-		return this.callNumber;
-	}
-
-	/**
-	 * Updates this object and the Borrowing table
-	 * 
-	 * @param callNumber
-	 *            Book that was borrowed
-	 * @throws SQLException
-	 *             if a database access error occurs; this method is called on a
-	 *             closed PreparedStatement or the SQL statement returns a
-	 *             ResultSet object
-	 */
-	public void setCallNumber(BookCopy callNumber) throws SQLException {
-		try {
-			PreparedStatement ps = con.prepareStatement("UPDATE Borrowing SET callNumber=?, copyNo=? WHERE borid=?");
-			ps.setInt(3, this.borid);
-			
-			ps.setInt(1, callNumber.getCallNumber().getCallNumber());
-			ps.setInt(2, callNumber.getCopyNo());
-			
-			ps.executeUpdate();
-			con.commit();
-			ps.close();
-			
-			this.callNumber = callNumber;
-		} catch (SQLException sql) {
-			System.out.println("Message: " + sql.getMessage());
-			try {
-				// Undo
-				con.rollback();
-			} catch (SQLException sql2) {
-				System.out.println("Message: " + sql2.getMessage());
-				System.exit(-1);
-			}
-			throw sql;
-		}
-	}
-
-	/**
-	 * @return Date borrowed
-	 */
-	public Date getOutDate() {
-		return this.outDate;
-	}
-
-	/**
-	 * Updates this object and the Borrowing table
-	 * 
-	 * @param outDate
-	 *            Date borrowed
-	 * @throws SQLException
-	 *             if a database access error occurs; this method is called on a
-	 *             closed PreparedStatement or the SQL statement returns a
-	 *             ResultSet object
-	 */
-	public void setOutDate(Date outDate) throws SQLException {
-		try {
-			PreparedStatement ps = con.prepareStatement("UPDATE Borrowing SET outDate=? WHERE borid=?");
-			ps.setInt(2, this.borid);
-			
-			ps.setDate(1, outDate);
-			
-			ps.executeUpdate();
-			con.commit();
-			ps.close();
-			
-			this.outDate = outDate;
-		} catch (SQLException sql) {
-			System.out.println("Message: " + sql.getMessage());
-			try {
-				// Undo
-				con.rollback();
-			} catch (SQLException sql2) {
-				System.out.println("Message: " + sql2.getMessage());
-				System.exit(-1);
-			}
-			throw sql;
-		}
-	}
-
-	/**
-	 * @return Date returned
-	 */
-	public Date getInDate() {
-		return this.inDate;
-	}
-
-	/**
-	 * Updates this object and the Borrowing table
-	 * 
-	 * @param inDate
-	 *            Date returned
-	 * @throws SQLException
-	 *             if a database access error occurs; this method is called on a
-	 *             closed PreparedStatement or the SQL statement returns a
-	 *             ResultSet object
-	 */
-	public void setInDate(Date inDate) throws SQLException {
-		try {
-			PreparedStatement ps = con.prepareStatement("UPDATE Borrowing SET inDate=? WHERE borid=?");
-			ps.setInt(2, this.borid);
-			
-			ps.setDate(1, inDate);
-			
-			ps.executeUpdate();
-			con.commit();
-			ps.close();
-			
-			this.inDate = inDate;
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			try {
