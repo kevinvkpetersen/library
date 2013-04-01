@@ -32,14 +32,33 @@ import com.Main;
  * 
  * @author Kevin Petersen
  */
-public class LoginWindow implements ActionListener {
-	private JFrame frame = new JFrame();
+public class LoginWindow {
+	private JFrame frame = new JFrame("Log In");
 	private JPanel contentPane = new JPanel();
 	private GridBagLayout gb = new GridBagLayout();
 	private GridBagConstraints c = new GridBagConstraints();
 	
 	private JTextField usernameField = new JTextField(10);
 	private JPasswordField passwordField = new JPasswordField(10);
+	
+	private ActionListener loginAction = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			String username = usernameField.getText();
+			String password = String.valueOf(passwordField.getPassword());
+			
+			if(connect(username, password)) {
+				// If username/password are correct, remove this and open main menu
+				frame.dispose();
+				new MainMenu().displayWindow();
+			} else if (loginAttempts-- > 0) {
+				// Clear the password field
+				passwordField.setText("");
+			} else {
+				frame.dispose();
+				System.exit(-1);
+			}
+		}
+	};
 	
 	private int loginAttempts = 3;
 	
@@ -50,7 +69,7 @@ public class LoginWindow implements ActionListener {
 		initializePane();
 		addUserName();
 		addPassword();
-		addButtons();
+		addButton();
 		loadDriver();
 	}
 	
@@ -104,13 +123,13 @@ public class LoginWindow implements ActionListener {
 		c.insets = new Insets(0, 0, 10, 10);
 		gb.setConstraints(passwordField, c);
 		contentPane.add(passwordField);
-		passwordField.addActionListener(this);
+		passwordField.addActionListener(this.loginAction);
 	}
 
 	/**
 	 * Builds the login button and adds it to the window 
 	 */
-	private void addButtons() {
+	private void addButton() {
 		// Place the login button
 		JButton loginButton = new JButton("Log In");
 		c.gridwidth = GridBagConstraints.REMAINDER;
@@ -118,8 +137,7 @@ public class LoginWindow implements ActionListener {
 		c.anchor = GridBagConstraints.CENTER;
 		gb.setConstraints(loginButton, c);
 		contentPane.add(loginButton);
-		loginButton.addActionListener(this);
-
+		loginButton.addActionListener(this.loginAction);
 	}
 	
 	/**
@@ -152,28 +170,7 @@ public class LoginWindow implements ActionListener {
 		frame.setVisible(true);
 
 		// place the cursor in the text field for the username
-		usernameField.requestFocus();			
-	}
-	
-	/**
-	 * Invoked when the Login button is clicked, or enter is pressed in the
-	 * password field
-	 */
-	public void actionPerformed(ActionEvent e) {
-		String username = usernameField.getText();
-		String password = String.valueOf(passwordField.getPassword());
-		
-		if(connect(username, password)) {
-			// If username/password are correct, remove this and open main menu
-			frame.dispose();
-			new MainMenu().showMenu();
-		} else if (loginAttempts-- > 0) {
-			// Clear the password field
-			passwordField.setText("");
-		} else {
-			frame.dispose();
-			System.exit(-1);
-		}
+		usernameField.requestFocus();
 	}
 	
 	/**
@@ -190,6 +187,8 @@ public class LoginWindow implements ActionListener {
 		
 		try {
 			Main.con = DriverManager.getConnection(connectURL, username, password);
+			// Disable auto commit mode
+			Main.con.setAutoCommit(false);
 			System.out.println("\nConnected to Oracle!");
 			return true;
 		} catch (SQLException sql) {

@@ -31,7 +31,7 @@ CREATE TABLE Borrower (
 	emailAddress	VARCHAR(50)		UNIQUE,
 	sinOrStNo		INTEGER			UNIQUE NOT NULL,
 	expiryDate		DATE,
-	type			VARCHAR(20)		NOT NULL,
+	type			VARCHAR(10)		NOT NULL,
 	PRIMARY KEY		(bid),
 	FOREIGN KEY		(type)			REFERENCES BorrowerType
 );
