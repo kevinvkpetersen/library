@@ -4,6 +4,467 @@
 
 package com.book;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.Main;
+
+/**
+ * Representation of a book as described by Book in tables.sql.
+ * 
+ * @author Kevin Petersen
+ */
 public class Book {
+	private static Connection con = Main.con;  
 	
+	private int callNumber;
+	private int isbn;
+	private String title;
+	private String mainAuthor;
+	private String publisher;
+	private int year;
+	 
+	/**
+	 * Constructor used only by this class to enforce an instance being a valid
+	 * entry in the Book table
+	 * 
+	 * @param callNumber
+	 *            Primary key id number for this book
+	 * @param isbn
+	 *            This book's ISBN number
+	 * @param title
+	 *            Book's full title
+	 * @param mainAuthor
+	 *            Book's main author
+	 * @param publisher
+	 *            Book's publisher
+	 * @param year
+	 *            Book's publishing year
+	 */
+	private Book(int callNumber, int isbn, String title, String mainAuthor,
+			String publisher, int year) {
+		this.callNumber = callNumber;
+		this.isbn = isbn;
+		this.title = title;
+		this.mainAuthor = mainAuthor;
+		this.publisher = publisher;
+		this.year = year;
+	 }
+	
+	/**
+	 * Add a book to the Book table.
+	 * 
+	 * @param callNumber
+	 *            Primary key id number for this book
+	 * @param isbn
+	 *            This book's ISBN number
+	 * @param title
+	 *            Book's full title
+	 * @param mainAuthor
+	 *            Book's main author
+	 * @param publisher
+	 *            Book's publisher
+	 * @param year
+	 *            Book's publishing year
+	 * @return Object representing the newly created entry
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement returns a
+	 *             ResultSet object
+	 */
+	public static Book addBook(int callNumber, int isbn, String title,
+			String mainAuthor, String publisher, int year) throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("INSERT INTO Book VALUES (?,?,?,?,?,?)");
+			
+			ps.setInt(1, callNumber);
+			ps.setInt(2, isbn);
+			ps.setString(3, title);
+			ps.setString(4, mainAuthor);
+			ps.setString(5, publisher);
+			ps.setInt(6, year);
+			
+			// All inputs are OK
+			ps.executeUpdate();
+			con.commit();
+			ps.close();
+			
+			return new Book(callNumber, isbn, title, mainAuthor, publisher, year);
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			try {
+				// Undo
+				con.rollback();
+			} catch (SQLException sql2) {
+				System.out.println("Message: " + sql2.getMessage());
+				System.exit(-1);
+			}
+			throw sql;
+		}
+	}
+	
+	/**
+	 * Looks up the entry for the given key in the Book table and returns
+	 * the corresponding object.
+	 * 
+	 * @param key
+	 *            The primary key used to look up the entry
+	 * @return A Book object representing the entry with the given key
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	public static Book getBook(int key) throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("SELECT * FROM Book WHERE callNumber=?");
+			ps.setInt(1, key);
+			
+			ps.setMaxRows(1);
+			ResultSet r = ps.executeQuery();
+			r.next();
+			
+			return parseLine(r);
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			throw sql;
+		}
+	}
+
+	/**
+	 * Looks up all the entries in the Book table and returns the corresponding
+	 * objects in a list.
+	 * 
+	 * @return A List of Book objects representing the entries of the Book table
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	public static List<Book> getAllBooks() throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("SELECT * FROM Book");
+			ResultSet r = ps.executeQuery();
+			List<Book> allBooks = new ArrayList<Book>();
+			
+			while(r.next()) {
+				allBooks.add(parseLine(r));
+			}
+			
+			return allBooks;
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			throw sql;
+		}
+	}
+	
+	/**
+	 * Reads the data from the current row in the result set and generates the
+	 * corresponding Book object
+	 * 
+	 * @param r
+	 *            Result Set of a query
+	 * @return The book represented by the current row of data
+	 * @throws SQLException
+	 *             if the columnLabel is not valid; if a database access error
+	 *             occurs or this method is called on a closed result set
+	 */
+	private static Book parseLine(ResultSet r) throws SQLException {
+		int callNumber = r.getInt("callNumber");
+		int isbn = r.getInt("isbn");
+		String title = r.getString("title");
+		String mainAuthor = r.getString("mainAuthor");
+		
+		String publisher = r.getString("publisher");
+		publisher = (r.wasNull() ? null : publisher);
+		
+		int year = r.getInt("year");
+		
+		return new Book(callNumber, isbn, title, mainAuthor, publisher, year);
+	}
+
+	/**
+	 * Deletes a book from the Book table.
+	 * 
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement returns a
+	 *             ResultSet object
+	 */
+	public void delete() throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("DELETE FROM Book WHERE callNumber=?");
+			ps.setInt(1, this.callNumber);
+			
+			ps.executeUpdate();
+			con.commit();
+			ps.close();
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			try {
+				// Undo
+				con.rollback();
+			} catch (SQLException sql2) {
+				System.out.println("Message: " + sql2.getMessage());
+				System.exit(-1);
+			}
+			throw sql;
+		}
+	}
+
+	/**
+	 * @return Primary key id number for this book
+	 */
+	public int getCallNumber() {
+		return this.callNumber;
+	}
+
+	/**
+	 * Updates this object and the Book table
+	 * 
+	 * @param callNumber
+	 *            Primary key id number for this book
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement returns a
+	 *             ResultSet object
+	 */
+	public void setCallNumber(int callNumber) throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("UPDATE Book SET callNumber=? WHERE callNumber=?");
+			ps.setInt(2, this.callNumber);
+			
+			ps.setInt(1, callNumber);
+			
+			ps.executeUpdate();
+			con.commit();
+			ps.close();
+			
+			this.callNumber = callNumber;
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			try {
+				// Undo
+				con.rollback();
+			} catch (SQLException sql2) {
+				System.out.println("Message: " + sql2.getMessage());
+				System.exit(-1);
+			}
+			throw sql;
+		}
+	}
+
+	/**
+	 * @return This book's ISBN number
+	 */
+	public int getIsbn() {
+		return this.isbn;
+	}
+
+	/**
+	 * Updates this object and the Book table
+	 * 
+	 * @param isbn
+	 *            This book's ISBN number
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement returns a
+	 *             ResultSet object
+	 */
+	public void setIsbn(int isbn) throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("UPDATE Book SET isbn=? WHERE callNumber=?");
+			ps.setInt(2, this.callNumber);
+			
+			ps.setInt(1, isbn);
+			
+			ps.executeUpdate();
+			con.commit();
+			ps.close();
+			
+			this.isbn = isbn;
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			try {
+				// Undo
+				con.rollback();
+			} catch (SQLException sql2) {
+				System.out.println("Message: " + sql2.getMessage());
+				System.exit(-1);
+			}
+			throw sql;
+		}
+	}
+
+	/**
+	 * @return Book's full title
+	 */
+	public String getTitle() {
+		return this.title;
+	}
+
+	/**
+	 * Updates this object and the Book table
+	 * 
+	 * @param title
+	 *            Book's full title
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement returns a
+	 *             ResultSet object
+	 */
+	public void setTitle(String title) throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("UPDATE Book SET title=? WHERE callNumber=?");
+			ps.setInt(2, this.callNumber);
+			
+			ps.setString(1, title);
+			
+			ps.executeUpdate();
+			con.commit();
+			ps.close();
+			
+			this.title = title;
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			try {
+				// Undo
+				con.rollback();
+			} catch (SQLException sql2) {
+				System.out.println("Message: " + sql2.getMessage());
+				System.exit(-1);
+			}
+			throw sql;
+		}
+	}
+
+	/**
+	 * @return Book's main author
+	 */
+	public String getMainAuthor() {
+		return this.mainAuthor;
+	}
+
+	/**
+	 * Updates this object and the Book table
+	 * 
+	 * @param mainAuthor
+	 *            Book's main author
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement returns a
+	 *             ResultSet object
+	 */
+	public void setMainAuthor(String mainAuthor) throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("UPDATE Book SET mainAuthor=? WHERE callNumber=?");
+			ps.setInt(2, this.callNumber);
+			
+			ps.setString(1, mainAuthor);
+			
+			ps.executeUpdate();
+			con.commit();
+			ps.close();
+			
+			this.mainAuthor = mainAuthor;
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			try {
+				// Undo
+				con.rollback();
+			} catch (SQLException sql2) {
+				System.out.println("Message: " + sql2.getMessage());
+				System.exit(-1);
+			}
+			throw sql;
+		}
+	}
+
+	/**
+	 * @return Book's publisher
+	 */
+	public String getPublisher() {
+		return this.publisher;
+	}
+
+	/**
+	 * Updates this object and the Book table
+	 * 
+	 * @param publisher
+	 *            Book's publisher
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement returns a
+	 *             ResultSet object
+	 */
+	public void setPublisher(String publisher) throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("UPDATE Book SET publisher=? WHERE callNumber=?");
+			ps.setInt(2, this.callNumber);
+			
+			ps.setString(1, publisher);
+			
+			ps.executeUpdate();
+			con.commit();
+			ps.close();
+			
+			this.publisher = publisher;
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			try {
+				// Undo
+				con.rollback();
+			} catch (SQLException sql2) {
+				System.out.println("Message: " + sql2.getMessage());
+				System.exit(-1);
+			}
+			throw sql;
+		}
+	}
+
+	/**
+	 * @return Book's publishing year
+	 */
+	public int getYear() {
+		return this.year;
+	}
+
+	/**
+	 * Updates this object and the Book table
+	 * 
+	 * @param year
+	 *            Book's publishing year
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement returns a
+	 *             ResultSet object
+	 */
+	public void setYear(int year) throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("UPDATE Book SET year=? WHERE callNumber=?");
+			ps.setInt(2, this.callNumber);
+			
+			ps.setInt(1, year);
+			
+			ps.executeUpdate();
+			con.commit();
+			ps.close();
+			
+			this.year = year;
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			try {
+				// Undo
+				con.rollback();
+			} catch (SQLException sql2) {
+				System.out.println("Message: " + sql2.getMessage());
+				System.exit(-1);
+			}
+			throw sql;
+		}
+	}
 }

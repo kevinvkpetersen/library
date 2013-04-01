@@ -1,5 +1,5 @@
 /* CPSC 304 - Library Checkout System
- * � Mar. 2013 Kevin Petersen. All rights reserved.
+ * © Mar. 2013 Kevin Petersen. All rights reserved.
  */
 
 package com.user;
@@ -100,7 +100,7 @@ public class BorrowerType {
 			ResultSet r = ps.executeQuery();
 			r.next();
 			
-			return new BorrowerType(key, r.getInt("bookTimeLimit"));
+			return parseLine(r);
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			throw sql;
@@ -124,7 +124,7 @@ public class BorrowerType {
 			List<BorrowerType> allTypes = new ArrayList<BorrowerType>();
 			
 			while(r.next()) {
-				allTypes.add(new BorrowerType(r.getString("type"), r.getInt("bookTimeLimit")));
+				allTypes.add(parseLine(r));
 			}
 			
 			return allTypes;
@@ -132,6 +132,24 @@ public class BorrowerType {
 			System.out.println("Message: " + sql.getMessage());
 			throw sql;
 		}
+	}
+
+	/**
+	 * Reads the data from the current row in the result set and generates the
+	 * corresponding BorrowerType object
+	 * 
+	 * @param r
+	 *            Result Set of a query
+	 * @return The borrower type represented by the current row of data
+	 * @throws SQLException
+	 *             if the columnLabel is not valid; if a database access error
+	 *             occurs or this method is called on a closed result set
+	 */
+	private static BorrowerType parseLine(ResultSet r) throws SQLException {
+		String type = r.getString("type");
+		int bookTimeLimit = r.getInt("bookTimeLimit");
+		
+		return new BorrowerType(type, bookTimeLimit);
 	}
 
 	/**

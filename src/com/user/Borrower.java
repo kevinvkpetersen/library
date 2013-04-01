@@ -123,7 +123,7 @@ public class Borrower {
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			try {
-				// undo the insert
+				// Undo
 				con.rollback();
 			} catch (SQLException sql2) {
 				System.out.println("Message: " + sql2.getMessage());
