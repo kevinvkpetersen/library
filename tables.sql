@@ -112,7 +112,7 @@ CREATE TABLE Borrowing(
 	callNumber		INTEGER			NOT NULL,
 	copyNo			INTEGER			NOT NULL,
 	outDate			DATE			NOT NULL,
-	inDate			DATE			NOT NULL,
+	inDate			DATE,
 	PRIMARY KEY		(borid),
 	FOREIGN KEY		(bid)			REFERENCES Borrower,
 	FOREIGN KEY		(callNumber, copyNo) REFERENCES BookCopy
