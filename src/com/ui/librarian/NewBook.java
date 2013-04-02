@@ -13,7 +13,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.sql.Date;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -21,9 +20,6 @@ import javax.swing.*;
 
 import com.book.Book;
 import com.book.BookCopy;
-import com.borrower.Borrower;
-import com.borrower.BorrowerType;
-import com.date.DateParser;
 
 /**
  * This class implements a graphical login window to connect to the Oracle
@@ -40,12 +36,10 @@ public class NewBook {
 	private static final int FIELD_WIDTH = 30;
 	private final int LABEL_ALIGNMENT = GridBagConstraints.LINE_START;
 	
-	private JTextField callNumberField = new JTextField(FIELD_WIDTH);
 	private JTextField isbnField = new JTextField(FIELD_WIDTH);
 	private JTextField titleField = new JTextField(FIELD_WIDTH);
 	private JTextField mainAuthorField = new JTextField(FIELD_WIDTH);
 	private JTextField publisherField = new JTextField(FIELD_WIDTH);
-	private JTextField subjectField = new JTextField(FIELD_WIDTH);
 	private JTextField yearField = new JTextField(FIELD_WIDTH);
 	
 	private ActionListener submitAction = new ActionListener() {
