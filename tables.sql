@@ -27,9 +27,9 @@ CREATE TABLE Borrower (
 	password 		VARCHAR(20)		NOT NULL,
 	name			VARCHAR(50)		NOT NULL,
 	address			VARCHAR(50),
-	phone			BIGINT,
+	phone			FLOAT,
 	emailAddress	VARCHAR(50)		UNIQUE,
-	sinOrStNo		BIGINT			UNIQUE NOT NULL,
+	sinOrStNo		FLOAT			UNIQUE NOT NULL,
 	expiryDate		DATE,
 	type			VARCHAR(10)		NOT NULL,
 	PRIMARY KEY		(bid),
@@ -41,7 +41,7 @@ INSERT INTO Borrower VALUES	(2, 'qwerty', 'Kevin P.', 'North Burnaby', 778997553
 
 CREATE TABLE Book (
 	callNumber		INTEGER			NOT NULL,
-	isbn			BIGINT			UNIQUE NOT NULL,
+	isbn			FLOAT			UNIQUE NOT NULL,
 	title			VARCHAR(50)		NOT NULL,
 	mainAuthor		VARCHAR(50)		NOT NULL,
 	publisher		VARCHAR(50),

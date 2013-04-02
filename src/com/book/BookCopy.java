@@ -43,38 +43,10 @@ public class BookCopy {
 	 }
 	
 	/**
-	 * Generates a new entry in the BookCopy table
-	 * 
-	 * @return A new BookCopy object with default values.
-	 * @throws SQLException
-	 *             if a database access error occurs; this method is called on a
-	 *             closed PreparedStatement or the SQL statement does not return
-	 *             a ResultSet object
-	 */
-	public static BookCopy generate(Book callNumber) throws SQLException {
-		int copyNo;
-		
-		try {
-			PreparedStatement ps = con.prepareStatement("SELECT MAX(copyNo) as maxCopyNo FROM BookCopy WHERE callNumber=?");
-			ps.setInt(1, callNumber.getCallNumber());
-			ResultSet r = ps.executeQuery();
-			
-			copyNo = (r.next() ? r.getInt("maxCopyNo") : 0);
-		} catch (SQLException sql) {
-			System.out.println("Message: " + sql.getMessage());
-			throw sql;
-		}
-		
-		return add(callNumber, copyNo + 1, "in");
-	}
-	
-	/**
 	 * Add a copy to the BookCopy table.
 	 * 
 	 * @param callNumber
 	 *            Book object this is a copy of
-	 * @param copyNo
-	 *            This book's copy number
 	 * @param status
 	 *            This copy's status
 	 * @return Object representing the newly created entry
@@ -83,7 +55,10 @@ public class BookCopy {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	private static BookCopy add(Book callNumber, int copyNo, String status) throws SQLException {
+	public static BookCopy add(Book callNumber, String status)
+			throws SQLException {
+		int copyNo = generateKey(callNumber);
+		
 		try {
 			PreparedStatement ps = con.prepareStatement("INSERT INTO BookCopy VALUES (?,?,?)");
 			
@@ -110,6 +85,28 @@ public class BookCopy {
 		}
 	}
 	
+	/**
+	 * Generates a new copyNo for an entry in the BookCopy table
+	 * 
+	 * @return An unused unique copyNo for this Book
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	private static int generateKey(Book callNumber) throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("SELECT MAX(copyNo) as maxCopyNo FROM BookCopy WHERE callNumber=?");
+			ps.setInt(1, callNumber.getCallNumber());
+			ResultSet r = ps.executeQuery();
+			
+			return (r.next() ? r.getInt("maxCopyNo") + 1 : 1);
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			throw sql;
+		}
+	}
+
 	/**
 	 * Looks up the entry for the given key in the BookCopy table and returns
 	 * the corresponding object.
@@ -237,7 +234,7 @@ public class BookCopy {
 	/**
 	 * @return This copy's status
 	 */
-	public String getstatus() {
+	public String getStatus() {
 		return this.status;
 	}
 
@@ -251,9 +248,9 @@ public class BookCopy {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	public void setstatus(String status) throws SQLException {
+	public void setStatus(String status) throws SQLException {
 		try {
-			PreparedStatement ps = con.prepareStatement("UPDATE Book SET status=? WHERE callNumber=? AND copyNo=?");
+			PreparedStatement ps = con.prepareStatement("UPDATE BookCopy SET status=? WHERE callNumber=? AND copyNo=?");
 			ps.setInt(2, this.callNumber.getCallNumber());
 			ps.setInt(3, this.copyNo);
 			

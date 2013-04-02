@@ -56,34 +56,8 @@ public class Book {
 	 }
 	
 	/**
-	 * Generates a new entry in the Book table
-	 * @return A new Book object with default values.
-	 * @throws SQLException
-	 *             if a database access error occurs; this method is called on a
-	 *             closed PreparedStatement or the SQL statement does not return
-	 *             a ResultSet object
-	 */
-	public static Book generate() throws SQLException {
-		int callNumber;
-		
-		try {
-			PreparedStatement ps = con.prepareStatement("SELECT MAX(callNumber) as maxCallNumber FROM Book");
-			ResultSet r = ps.executeQuery();
-			
-			callNumber = (r.next() ? r.getInt("maxCallNumber") : 0);
-		} catch (SQLException sql) {
-			System.out.println("Message: " + sql.getMessage());
-			throw sql;
-		}
-		
-		return add(callNumber + 1, 0, "a", "a", "a", 0);
-	}
-	
-	/**
 	 * Add a book to the Book table.
 	 * 
-	 * @param callNumber
-	 *            Primary key id number for this book
 	 * @param isbn
 	 *            This book's ISBN number
 	 * @param title
@@ -100,8 +74,10 @@ public class Book {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	private static Book add(int callNumber, int isbn, String title,
-			String mainAuthor, String publisher, int year) throws SQLException {
+	public static Book add(int isbn, String title, String mainAuthor,
+			String publisher, int year) throws SQLException {
+		int callNumber = generateKey();
+		
 		try {
 			PreparedStatement ps = con.prepareStatement("INSERT INTO Book VALUES (?,?,?,?,?,?)");
 			
@@ -131,6 +107,27 @@ public class Book {
 		}
 	}
 	
+	/**
+	 * Generates a new key for an entry in the Borrower table
+	 * 
+	 * @return An unused unique key for this table
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	private static int generateKey() throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("SELECT MAX(callNumber) as maxCallNumber FROM Book");
+			ResultSet r = ps.executeQuery();
+			
+			return (r.next() ? r.getInt("maxCallNumber") + 1 : 1);
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			throw sql;
+		}
+	}
+
 	/**
 	 * Looks up the entry for the given key in the Book table and returns
 	 * the corresponding object.

@@ -16,14 +16,9 @@ import java.awt.event.WindowEvent;
 import java.sql.Date;
 import java.sql.SQLException;
 
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JTextField;
+import javax.swing.*;
 
+import com.borrower.Borrower;
 import com.borrower.BorrowerType;
 import com.date.DateParser;
 
@@ -42,7 +37,6 @@ public class Overdue {
 	private static final int FIELD_WIDTH = 30;
 	private final int LABEL_ALIGNMENT = GridBagConstraints.LINE_START;
 	
-	private JTextField bidField = new JTextField(FIELD_WIDTH);
 	private JPasswordField passwordField = new JPasswordField(FIELD_WIDTH);
 	private JTextField nameField = new JTextField(FIELD_WIDTH);
 	private JTextField addressField = new JTextField(FIELD_WIDTH);
@@ -55,7 +49,6 @@ public class Overdue {
 	private ActionListener submitAction = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			try {
-				int bid = Integer.parseInt(bidField.getText());
 				String password = String.valueOf(passwordField.getPassword()); 
 				String name = nameField.getText();
 				
@@ -63,20 +56,22 @@ public class Overdue {
 				address = (address.isEmpty() ? null : address);
 				
 				String phoneString = phoneField.getText();
-				int phone = (phoneString.isEmpty() ? 0 : Integer.parseInt(phoneString));
+				float phone = (phoneString.isEmpty() ? 0 : Float.parseFloat(phoneString));
 				
 				String emailAddress = emailField.getText();
 				emailAddress = (emailAddress.isEmpty() ? null : emailAddress);
 				
-				int sinOrStNo = Integer.parseInt(sinField.getText());
+				float sinOrStNo = Float.parseFloat(sinField.getText());
 				
 				String dateString = expiryField.getText();
 				Date expiryDate = (dateString.isEmpty() ? null : DateParser.convertToDate(dateString)); 
 				
 				BorrowerType type = BorrowerType.get(typeField.getText());
 				
-				System.out.print("Borrower added!");
-				bidField.setText("");
+				Borrower b = Borrower.add(password, name, address, phone,
+						emailAddress, sinOrStNo, expiryDate, type);
+
+				System.out.println("Borrower #" + b.getBid() + " added!");
 				passwordField.setText("");
 				nameField.setText("");
 				addressField.setText("");
@@ -86,7 +81,7 @@ public class Overdue {
 				expiryField.setText("");
 				typeField.setText("");
 			} catch (SQLException sql) {
-				System.out.print("Could not add Borrower.");
+				System.out.println("Could not add Borrower.");
 			}
 		}
 	};
@@ -101,7 +96,6 @@ public class Overdue {
 	 */
 	public Overdue() {
 		initializePane();
-		addBid();
 		addPassword();
 		addName();
 		addAddress();
@@ -130,42 +124,23 @@ public class Overdue {
 	}
 
 	/**
-	 * Builds the bid field and label and adds them to the window 
-	 */
-	private void addBid() {
-		// Place the bid label
-		JLabel label = new JLabel("Enter Borrower ID*: ");
-		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(10, 10, 5, 0);
-		c.anchor = LABEL_ALIGNMENT;
-		gb.setConstraints(label, c);
-		contentPane.add(label);
-
-		// Place the text field for the bid
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(10, 0, 5, 10);
-		gb.setConstraints(bidField, c);
-		contentPane.add(bidField);
-	}
-	
-	/**
 	 * Builds the password field and label and adds them to the window 
 	 */
 	private void addPassword() {
 		// Place password label
 		JLabel label = new JLabel("Enter Password*: ");
 		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(0, 10, 5, 0);
+		c.insets = new Insets(10, 10, 5, 0);
 		c.anchor = LABEL_ALIGNMENT;
 		gb.setConstraints(label, c);
 		contentPane.add(label);
 
 		// Place the password field
-		passwordField.setEchoChar('*');
+		this.passwordField.setEchoChar('*');
 		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(passwordField, c);
-		contentPane.add(passwordField);
+		c.insets = new Insets(10, 0, 5, 10);
+		gb.setConstraints(this.passwordField, c);
+		contentPane.add(this.passwordField);
 	}
 
 	/**
@@ -183,8 +158,8 @@ public class Overdue {
 		// Place the text field for the name
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(nameField, c);
-		contentPane.add(nameField);
+		gb.setConstraints(this.nameField, c);
+		contentPane.add(this.nameField);
 	}
 	
 	/**
@@ -202,8 +177,8 @@ public class Overdue {
 		// Place the text field for the address
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(addressField, c);
-		contentPane.add(addressField);
+		gb.setConstraints(this.addressField, c);
+		contentPane.add(this.addressField);
 	}
 	
 	/**
@@ -221,8 +196,8 @@ public class Overdue {
 		// Place the text field for the phone
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(phoneField, c);
-		contentPane.add(phoneField);
+		gb.setConstraints(this.phoneField, c);
+		contentPane.add(this.phoneField);
 	}
 	
 	/**
@@ -240,8 +215,8 @@ public class Overdue {
 		// Place the text field for the email
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(emailField, c);
-		contentPane.add(emailField);
+		gb.setConstraints(this.emailField, c);
+		contentPane.add(this.emailField);
 	}
 	
 	/**
@@ -259,8 +234,8 @@ public class Overdue {
 		// Place the text field for the sin
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(sinField, c);
-		contentPane.add(sinField);
+		gb.setConstraints(this.sinField, c);
+		contentPane.add(this.sinField);
 	}
 	
 	/**
@@ -278,8 +253,8 @@ public class Overdue {
 		// Place the text field for the expiry
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(expiryField, c);
-		contentPane.add(expiryField);
+		gb.setConstraints(this.expiryField, c);
+		contentPane.add(this.expiryField);
 	}
 	
 	/**
@@ -297,8 +272,8 @@ public class Overdue {
 		// Place the text field for the type
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(typeField, c);
-		contentPane.add(typeField);
+		gb.setConstraints(this.typeField, c);
+		contentPane.add(this.typeField);
 	}
 	
 	/**
@@ -340,12 +315,12 @@ public class Overdue {
 		Dimension d = frame.getToolkit().getScreenSize();
 		Rectangle r = frame.getBounds();
 		frame.setLocation(	(d.width - r.width) / 2,
-								(d.height - r.height) / 2);
+							(d.height - r.height) / 2);
 
 		// make the window visible
 		frame.setVisible(true);
 
-		// place the cursor in the text field for the username
-		bidField.requestFocus();
+		// place the cursor in the text field for the password
+		this.passwordField.requestFocus();
 	}
 }

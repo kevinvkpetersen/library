@@ -20,7 +20,9 @@ import com.Main;
  * @author Kevin Petersen
  */
 public class Fine {
-	private static Connection con = Main.con;  
+	public static final float FEE_PER_DAY = (float) 0.10;
+
+	private static Connection con = Main.con;
 	
 	private int fid;
 	private float amount;
@@ -52,35 +54,8 @@ public class Fine {
 	}
 	
 	/**
-	 * Generates a new entry in the Fine table
-	 * @return A new Fine object with default values.
-	 * @throws SQLException
-	 *             if a database access error occurs; this method is called on a
-	 *             closed PreparedStatement or the SQL statement does not return
-	 *             a ResultSet object
-	 */
-	public static Fine generate() throws SQLException {
-		int fid;
-		
-		try {
-			PreparedStatement ps = con.prepareStatement("SELECT MAX(fid) as maxFid FROM Fine");
-			ResultSet r = ps.executeQuery();
-			
-			fid = (r.next() ? r.getInt("maxFid") : 0);
-		} catch (SQLException sql) {
-			System.out.println("Message: " + sql.getMessage());
-			throw sql;
-		}
-		
-		Borrowing borid = Borrowing.getAll().get(0);
-		return add(fid + 1, 0, new Date(0), new Date(0), borid);
-	}
-	
-	/**
 	 * Add a fine to the Fine table.
 	 * 
-	 * @param fid
-	 *            Primary key id number for this fine
 	 * @param amount
 	 *            Amount owed
 	 * @param issuedDate
@@ -95,7 +70,10 @@ public class Fine {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	private static Fine add(int fid, float amount, Date issuedDate, Date paidDate, Borrowing borid) throws SQLException {
+	public static Fine add(float amount, Date issuedDate, Date paidDate,
+			Borrowing borid) throws SQLException {
+		int fid = generateKey();
+		
 		try {
 			PreparedStatement ps = con.prepareStatement("INSERT INTO Fine VALUES (?,?,?,?,?)");
 			
@@ -120,6 +98,27 @@ public class Fine {
 				System.out.println("Message: " + sql2.getMessage());
 				System.exit(-1);
 			}
+			throw sql;
+		}
+	}
+	
+	/**
+	 * Generates a new key for an entry in the Borrower table
+	 * 
+	 * @return An unused unique key for this table
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	private static int generateKey() throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("SELECT MAX(fid) as maxFid FROM Fine");
+			ResultSet r = ps.executeQuery();
+			
+			return (r.next() ? r.getInt("maxFid") + 1 : 1);
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
 			throw sql;
 		}
 	}

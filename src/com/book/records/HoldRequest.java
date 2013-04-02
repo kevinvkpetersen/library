@@ -50,36 +50,8 @@ public class HoldRequest {
 	}
 	
 	/**
-	 * Generates a new entry in the HoldRequest table
-	 * @return A new HoldRequest object with default values.
-	 * @throws SQLException
-	 *             if a database access error occurs; this method is called on a
-	 *             closed PreparedStatement or the SQL statement does not return
-	 *             a ResultSet object
-	 */
-	public static HoldRequest generate() throws SQLException {
-		int hid;
-		
-		try {
-			PreparedStatement ps = con.prepareStatement("SELECT MAX(hid) as maxHid FROM HoldRequest");
-			ResultSet r = ps.executeQuery();
-			
-			hid = (r.next() ? r.getInt("maxHid") : 0);
-		} catch (SQLException sql) {
-			System.out.println("Message: " + sql.getMessage());
-			throw sql;
-		}
-		
-		Borrower bid = Borrower.getAll().get(0);
-		Book callNumber = Book.getAll().get(0);
-		return add(hid + 1, bid, callNumber, new Date(0));
-	}
-	
-	/**
 	 * Add a hold to the HoldRequest table.
 	 * 
-	 * @param hid
-	 *            Primary key id number for this hold request
 	 * @param bid
 	 *            Borrower that requested the hold
 	 * @param callNumber
@@ -92,8 +64,10 @@ public class HoldRequest {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	private static HoldRequest add(int hid, Borrower bid,
-			Book callNumber, Date issuedDate) throws SQLException {
+	public static HoldRequest add(Borrower bid, Book callNumber, Date issuedDate)
+			throws SQLException {
+		int hid = generateKey();
+		
 		try {
 			PreparedStatement ps = con.prepareStatement("INSERT INTO HoldRequest VALUES (?,?,?,?)");
 			
@@ -117,6 +91,27 @@ public class HoldRequest {
 				System.out.println("Message: " + sql2.getMessage());
 				System.exit(-1);
 			}
+			throw sql;
+		}
+	}
+	
+	/**
+	 * Generates a new key for an entry in the HoldRequest table
+	 * 
+	 * @return An unused unique key for this table
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	private static int generateKey() throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("SELECT MAX(hid) as maxHid FROM HoldRequest");
+			ResultSet r = ps.executeQuery();
+			
+			return (r.next() ? r.getInt("maxHid") + 1 : 1);
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
 			throw sql;
 		}
 	}
