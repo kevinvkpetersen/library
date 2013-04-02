@@ -13,8 +13,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.sql.Date;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -24,10 +25,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import com.book.Book;
-import com.book.BookCopy;
 import com.book.records.Borrowing;
 import com.borrower.Borrower;
-import com.date.DateParser;
 
 
 /**
@@ -54,27 +53,17 @@ public class Checkout {
 			try {
 				Borrower bid = Borrower.get(Integer.parseInt(bidField.getText()));
 				if(bid.isValid()) {
-					Book[] callNumber = new Book[NUM_BOOK_FIELDS];
+					List<Borrowing> receipt = new ArrayList<Borrowing>();
+					
 					for(int i = 0; i < NUM_BOOK_FIELDS; i++) {
+						String bookString = bookField[i].getText();
+						if (bookString.isEmpty()) {
+							continue;
+						}
+						
 						try {
-							String bookString = bookField[i].getText();
-							if (bookString.isEmpty()) {
-								continue;
-							}
-							
-							callNumber[i] = Book.get(Integer.parseInt(bookString));
-							BookCopy copy = callNumber[i].findAvailableCopy();
-							Date outDate = DateParser.today();
-							Date inDate = DateParser.todayPlusDays(bid.getType().getBookTimeLimit());
-							
-							Borrowing.add(bid, copy, outDate, inDate);
-							copy.setStatus("out");
-							
-							System.out.println("Copy #" + copy.getCopyNo()
-									+ " of Book with Call Number "
-									+ copy.getCallNumber().getCallNumber()
-									+ " checked out.");
-							
+							Book book = Book.get(Integer.parseInt(bookString));
+							receipt.add(book.findAvailableCopy().checkout(bid));
 							bookField[i].setText("");
 						} catch (SQLException sql) {
 							System.out.println("Could not checkout book " + (i+1));

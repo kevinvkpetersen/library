@@ -4,14 +4,12 @@
 
 package com.book;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.Main;
+import com.book.records.HoldRequest;
 
 /**
  * Representation of a book as described by Book in tables.sql.
@@ -265,9 +263,50 @@ public class Book {
 			System.out.println("Message: " + sql.getMessage());
 			throw sql;
 		}
-		
 
 		return BookCopy.get(this, copyNo);
+	}
+	
+	public boolean hasHold() throws SQLException {
+		PreparedStatement ps = con.prepareStatement("SELECT * FROM HoldRequest WHERE callNumber=?");
+		ps.setInt(1, this.callNumber);
+		ps.setMaxRows(1);
+		ResultSet r = ps.executeQuery();
+		
+		return r.next();
+	}
+	
+	public HoldRequest getHold() throws SQLException {
+		Date minDate;
+		int hid;
+		
+		try {
+			PreparedStatement ps = con.prepareStatement("SELECT MIN(issuedDate) as minDate FROM HoldRequest WHERE callNumber=?");
+			ps.setInt(1, this.callNumber);
+			ResultSet r = ps.executeQuery();
+			
+			if(r.next()) {
+				minDate = r.getDate("minDate");
+			} else {
+				throw new SQLException("No holds.");
+			}
+			
+			ps = con.prepareStatement("SELECT hid FROM HoldRequest WHERE callNumber=? AND issuedDate=?");
+			ps.setInt(1, this.callNumber);
+			ps.setDate(2, minDate);
+			r = ps.executeQuery();
+			
+			if(r.next()) {
+				hid = r.getInt("hid");
+			} else {
+				throw new SQLException("No holds.");
+			}
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			throw sql;
+		}
+		
+		return HoldRequest.get(hid);
 	}
 
 	/**

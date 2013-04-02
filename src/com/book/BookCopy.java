@@ -5,6 +5,7 @@
 package com.book;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -12,6 +13,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.Main;
+import com.book.records.Borrowing;
+import com.book.records.Fine;
+import com.borrower.Borrower;
+import com.date.DateParser;
 
 /**
  * Representation of a book as described by Book in tables.sql.
@@ -216,7 +221,37 @@ public class BookCopy {
 			throw sql;
 		}
 	}
-
+	
+	public Borrowing checkout(Borrower bid) throws SQLException {
+		Date outDate = DateParser.today();
+		Date dueDate = DateParser.todayPlusDays(bid.getType().getBookTimeLimit());
+		Borrowing record = Borrowing.add(bid, this, outDate, dueDate);
+		this.setStatus("out");
+		System.out.println("Copy #" + this.copyNo + " of Book with Call Number "
+				+ this.callNumber.getCallNumber() + " checked out.");
+		return record;
+	}
+	
+	public void doReturn() throws SQLException {
+		Borrowing record = Borrowing.getLast(this);
+		
+		int daysLate = DateParser.daysBetween(DateParser.today(), record.getInDate());
+		if(daysLate > 0) {
+			Fine.add(Fine.FEE_PER_DAY*daysLate, DateParser.today(), null, record);
+		}
+		
+		// Check for hold
+		if(this.callNumber.hasHold()) {
+			this.setStatus("on-hold");
+			int bid = this.callNumber.getHold().getBid().getBid();
+			System.out.println("Notify borrower #" + bid);
+		} else {
+			this.setStatus("in");
+		}
+		
+		System.out.print("Book returned.");
+	}
+	
 	/**
 	 * @return Book object this is a copy of
 	 */
