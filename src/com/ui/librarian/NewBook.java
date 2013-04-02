@@ -15,10 +15,12 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.util.List;
 
 import javax.swing.*;
 
 import com.book.Book;
+import com.book.BookCopy;
 import com.borrower.Borrower;
 import com.borrower.BorrowerType;
 import com.date.DateParser;
@@ -58,15 +60,32 @@ public class NewBook {
 				
 				String yearString = yearField.getText();
 				int year = (yearString.isEmpty() ? 0 : Integer.parseInt(yearString));
-			
+				List<Book> bookList = Book.getAll();
+				Boolean exists = false;
+				Book FoundBook = null;
+				for (Book boo : bookList) {
+					if (boo.getIsbn() == isbn) {
+						exists = true;
+						FoundBook = boo;
+					}
+					break;	
+				}
+				
+				if (exists) { 
+					BookCopy b = BookCopy.generate(FoundBook);
+					System.out.println("A new copy of #" + b.getCallNumber() + " has been added!");
+				} 
+				else {
 				Book b = Book.generate();
 				b.setIsbn(isbn);
 				b.setTitle(title);
 				b.setMainAuthor(mainAuthor);
 				b.setPublisher(publisher);
 				b.setYear(year);
+				System.out.println("Book #" + b.getCallNumber() + " added!");
+				}
 				
-				System.out.println("Borrower #" + b.getCallNumber() + " added!");
+
 				isbnField.setText("");
 				titleField.setText("");
 				mainAuthorField.setText("");
