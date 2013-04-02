@@ -55,36 +55,8 @@ public class Borrowing {
 	}
 	
 	/**
-	 * Generates a new entry in the Borrowing table
-	 * @return A new Borrowing object with default values.
-	 * @throws SQLException
-	 *             if a database access error occurs; this method is called on a
-	 *             closed PreparedStatement or the SQL statement does not return
-	 *             a ResultSet object
-	 */
-	public static Borrowing generate() throws SQLException {
-		int borid;
-		
-		try {
-			PreparedStatement ps = con.prepareStatement("SELECT MAX(borid) as maxBorid FROM Borrowing");
-			ResultSet r = ps.executeQuery();
-			
-			borid = (r.next() ? r.getInt("maxBorid") : 0);
-		} catch (SQLException sql) {
-			System.out.println("Message: " + sql.getMessage());
-			throw sql;
-		}
-		
-		Borrower bid = Borrower.getAll().get(0);
-		BookCopy callNumber = BookCopy.getAll().get(0);
-		return add(borid + 1, bid, callNumber, new Date(0), new Date(0));
-	}
-	
-	/**
 	 * Add a borrow record to the Borrowing table.
 	 * 
-	 * @param borid
-	 *            Primary key id number for this borrow
 	 * @param bid
 	 *            Borrower that borrowed the book
 	 * @param callNumber
@@ -99,8 +71,10 @@ public class Borrowing {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	private static Borrowing add(int borid, Borrower bid, BookCopy callNumber,
+	public static Borrowing add(Borrower bid, BookCopy callNumber,
 			Date outDate, Date inDate) throws SQLException {
+		int borid = generateKey();
+		
 		try {
 			PreparedStatement ps = con.prepareStatement("INSERT INTO Borrowing VALUES (?,?,?,?,?,?)");
 			
@@ -126,6 +100,27 @@ public class Borrowing {
 				System.out.println("Message: " + sql2.getMessage());
 				System.exit(-1);
 			}
+			throw sql;
+		}
+	}
+	
+	/**
+	 * Generates a new key for an entry in the Borrower table
+	 * 
+	 * @return An unused unique key for this table
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	private static int generateKey() throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("SELECT MAX(borid) as maxBorid FROM Borrowing");
+			ResultSet r = ps.executeQuery();
+			
+			return (r.next() ? r.getInt("maxBorid") + 1 : 1);
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
 			throw sql;
 		}
 	}
@@ -238,6 +233,51 @@ public class Borrowing {
 			}
 			throw sql;
 		}
+	}
+
+	/**
+	 * Looks up the entry for the given key in the Borrowing table and returns
+	 * the corresponding object.
+	 * 
+	 * @param borid
+	 *            The primary key used to look up the entry
+	 * @return A Borrowing object representing the entry with the given key
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	public static Borrowing getLast(BookCopy callNumber) throws SQLException {
+		Date recent;
+		int borid;
+		
+		try {
+			PreparedStatement ps = con.prepareStatement("SELECT MAX(outDate) as recent FROM Borrowing WHERE callNumber=? AND copyNo=?");
+			ps.setInt(1, callNumber.getCallNumber().getCallNumber());
+			ps.setInt(2, callNumber.getCopyNo());
+			ResultSet r = ps.executeQuery();
+			if(r.next()) {
+				recent = r.getDate("recent");
+			} else {
+				throw new SQLException("No such Borrow record.");
+			}
+			
+			ps = con.prepareStatement("SELECT borid FROM Borrowing WHERE callNumber=? AND copyNo=? AND outDate=?");
+			ps.setInt(1, callNumber.getCallNumber().getCallNumber());
+			ps.setInt(2, callNumber.getCopyNo());
+			ps.setDate(3, recent);
+			r = ps.executeQuery();
+			if(r.next()) {
+				borid = r.getInt("borid");
+			} else {
+				throw new SQLException("No such Borrow record.");
+			}
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			throw sql;
+		}
+		
+		return Borrowing.get(borid);
 	}
 
 	/**

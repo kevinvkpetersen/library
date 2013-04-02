@@ -68,16 +68,9 @@ public class NewBorrower {
 				
 				BorrowerType type = BorrowerType.get(typeField.getText());
 				
-				Borrower b = Borrower.generate();
-				b.setPassword(password);
-				b.setName(name);
-				b.setAddress(address);
-				b.setPhone(phone);
-				b.setEmailAddress(emailAddress);
-				b.setSinOrStNo(sinOrStNo);
-				b.setExpiryDate(expiryDate);
-				b.setType(type);
-				
+				Borrower b = Borrower.add(password, name, address, phone,
+						emailAddress, sinOrStNo, expiryDate, type);
+
 				System.out.println("Borrower #" + b.getBid() + " added!");
 				passwordField.setText("");
 				nameField.setText("");
@@ -143,11 +136,11 @@ public class NewBorrower {
 		contentPane.add(label);
 
 		// Place the password field
-		passwordField.setEchoChar('*');
+		this.passwordField.setEchoChar('*');
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(10, 0, 5, 10);
-		gb.setConstraints(passwordField, c);
-		contentPane.add(passwordField);
+		gb.setConstraints(this.passwordField, c);
+		contentPane.add(this.passwordField);
 	}
 
 	/**
@@ -165,8 +158,8 @@ public class NewBorrower {
 		// Place the text field for the name
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(nameField, c);
-		contentPane.add(nameField);
+		gb.setConstraints(this.nameField, c);
+		contentPane.add(this.nameField);
 	}
 	
 	/**
@@ -184,8 +177,8 @@ public class NewBorrower {
 		// Place the text field for the address
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(addressField, c);
-		contentPane.add(addressField);
+		gb.setConstraints(this.addressField, c);
+		contentPane.add(this.addressField);
 	}
 	
 	/**
@@ -203,8 +196,8 @@ public class NewBorrower {
 		// Place the text field for the phone
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(phoneField, c);
-		contentPane.add(phoneField);
+		gb.setConstraints(this.phoneField, c);
+		contentPane.add(this.phoneField);
 	}
 	
 	/**
@@ -222,8 +215,8 @@ public class NewBorrower {
 		// Place the text field for the email
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(emailField, c);
-		contentPane.add(emailField);
+		gb.setConstraints(this.emailField, c);
+		contentPane.add(this.emailField);
 	}
 	
 	/**
@@ -241,8 +234,8 @@ public class NewBorrower {
 		// Place the text field for the sin
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(sinField, c);
-		contentPane.add(sinField);
+		gb.setConstraints(this.sinField, c);
+		contentPane.add(this.sinField);
 	}
 	
 	/**
@@ -260,8 +253,8 @@ public class NewBorrower {
 		// Place the text field for the expiry
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(expiryField, c);
-		contentPane.add(expiryField);
+		gb.setConstraints(this.expiryField, c);
+		contentPane.add(this.expiryField);
 	}
 	
 	/**
@@ -279,8 +272,8 @@ public class NewBorrower {
 		// Place the text field for the type
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(typeField, c);
-		contentPane.add(typeField);
+		gb.setConstraints(this.typeField, c);
+		contentPane.add(this.typeField);
 	}
 	
 	/**
@@ -322,12 +315,12 @@ public class NewBorrower {
 		Dimension d = frame.getToolkit().getScreenSize();
 		Rectangle r = frame.getBounds();
 		frame.setLocation(	(d.width - r.width) / 2,
-								(d.height - r.height) / 2);
+							(d.height - r.height) / 2);
 
 		// make the window visible
 		frame.setVisible(true);
 
 		// place the cursor in the text field for the password
-		passwordField.requestFocus();
+		this.passwordField.requestFocus();
 	}
 }

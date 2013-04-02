@@ -13,6 +13,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.sql.Date;
 import java.sql.SQLException;
 
 import javax.swing.BorderFactory;
@@ -45,11 +46,10 @@ public class Checkout {
 	private final int LABEL_ALIGNMENT = GridBagConstraints.LINE_START;
 	private final int NUM_BOOK_FIELDS = 5;
 	
-	
 	private JTextField bidField = new JTextField(FIELD_WIDTH);
 	private JTextField[] bookField = new JTextField[NUM_BOOK_FIELDS];
 	
-	private ActionListener submitAction = new ActionListener() {
+	private ActionListener checkoutAction = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			try {
 				Borrower bid = Borrower.get(Integer.parseInt(bidField.getText()));
@@ -64,11 +64,11 @@ public class Checkout {
 							
 							callNumber[i] = Book.get(Integer.parseInt(bookString));
 							BookCopy copy = callNumber[i].findAvailableCopy();
+							Date outDate = DateParser.today();
+							Date inDate = DateParser.todayPlusDays(bid.getType().getBookTimeLimit());
 							
-							Borrowing record = Borrowing.generate();
-							record.setBid(bid);
-							record.setCallNumber(copy);
-							record.setOutDate(DateParser.today());
+							Borrowing.add(bid, copy, outDate, inDate);
+							copy.setStatus("out");
 							
 							System.out.println("Copy #" + copy.getCopyNo()
 									+ " of Book with Call Number "
@@ -165,13 +165,13 @@ public class Checkout {
 	 */
 	private void addSubmitButton() {
 		// Place the submit button
-		JButton button = new JButton("Submit");
+		JButton button = new JButton("Check out");
 		c.gridwidth = GridBagConstraints.RELATIVE;
 		c.insets = new Insets(5, 10, 10, 5);
 		c.anchor = GridBagConstraints.LINE_START;
 		gb.setConstraints(button, c);
 		contentPane.add(button);
-		button.addActionListener(this.submitAction);
+		button.addActionListener(this.checkoutAction);
 	}
 	
 	/**

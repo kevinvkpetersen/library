@@ -71,35 +71,8 @@ public class Borrower {
 	}
 	
 	/**
-	 * Generates a new entry in the Borrower table
-	 * @return A new Borrower object with default values.
-	 * @throws SQLException
-	 *             if a database access error occurs; this method is called on a
-	 *             closed PreparedStatement or the SQL statement does not return
-	 *             a ResultSet object
-	 */
-	public static Borrower generate() throws SQLException {
-		int bid;
-		
-		try {
-			PreparedStatement ps = con.prepareStatement("SELECT MAX(bid) as maxBid FROM Borrower");
-			ResultSet r = ps.executeQuery();
-			
-			bid = (r.next() ? r.getInt("maxBid") : 0);
-		} catch (SQLException sql) {
-			System.out.println("Message: " + sql.getMessage());
-			throw sql;
-		}
-		
-		BorrowerType type = BorrowerType.getAll().get(0);
-		return add(bid + 1, "a", "a", "a", 0, "a", 0, new Date(0), type);
-	}
-	
-	/**
 	 * Add a borrower to the Borrower table.
 	 * 
-	 * @param bid
-	 *            Primary key id number for this borrower
 	 * @param password
 	 *            This borrower's password
 	 * @param name
@@ -122,9 +95,10 @@ public class Borrower {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	private static Borrower add(int bid, String password, String name,
+	public static Borrower add(String password, String name,
 			String address, float phone, String emailAddress, float sinOrStNo,
 			Date expiryDate, BorrowerType type) throws SQLException {
+		int bid = generateKey();
 		
 		try {
 			PreparedStatement ps = con.prepareStatement("INSERT INTO Borrower VALUES (?,?,?,?,?,?,?,?,?)");
@@ -155,6 +129,27 @@ public class Borrower {
 				System.out.println("Message: " + sql2.getMessage());
 				System.exit(-1);
 			}
+			throw sql;
+		}
+	}
+	
+	/**
+	 * Generates a new key for an entry in the Borrower table
+	 * 
+	 * @return An unused unique key for this table
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	private static int generateKey() throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("SELECT MAX(bid) as maxBid FROM Borrower");
+			ResultSet r = ps.executeQuery();
+			
+			return (r.next() ? r.getInt("maxBid") + 1 : 1);
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
 			throw sql;
 		}
 	}
