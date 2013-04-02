@@ -129,7 +129,7 @@ public class NewBook {
 	 * Builds the ISBN field and label and adds them to the window 
 	 */
 	private void addISBN() {
-		// Place the bid label
+		// Place the isbn label
 		JLabel label = new JLabel("Enter ISBN*: ");
 		c.gridwidth = GridBagConstraints.RELATIVE;
 		c.insets = new Insets(10, 10, 5, 0);
@@ -137,7 +137,7 @@ public class NewBook {
 		gb.setConstraints(label, c);
 		contentPane.add(label);
 
-		// Place the text field for the bid
+		// Place the isbn field for the bid
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(10, 0, 5, 10);
 		gb.setConstraints(isbnField, c);
@@ -148,7 +148,7 @@ public class NewBook {
 	 * Builds the Title field and label and adds them to the window 
 	 */
 	private void addTitle() {
-		// Place password label
+		// Place title label
 		JLabel label = new JLabel("Enter Title*: ");
 		c.gridwidth = GridBagConstraints.RELATIVE;
 		c.insets = new Insets(0, 10, 5, 0);
@@ -156,7 +156,7 @@ public class NewBook {
 		gb.setConstraints(label, c);
 		contentPane.add(label);
 
-		// Place the password field
+		// Place the title field
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(0, 0, 5, 10);
 		gb.setConstraints(titleField, c);
@@ -167,7 +167,7 @@ public class NewBook {
 	 * Builds the name Main Author and label and adds them to the window 
 	 */
 	private void addMainAuthor() {
-		// Place the name label
+		// Place the main author label
 		JLabel label = new JLabel("Enter Main Author*: ");
 		c.gridwidth = GridBagConstraints.RELATIVE;
 		c.insets = new Insets(0, 10, 5, 0);
@@ -175,7 +175,7 @@ public class NewBook {
 		gb.setConstraints(label, c);
 		contentPane.add(label);
 
-		// Place the text field for the name
+		// Place the text field for the main author
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(0, 0, 5, 10);
 		gb.setConstraints(mainAuthorField, c);
@@ -186,7 +186,7 @@ public class NewBook {
 	 * Builds the Publisher field and label and adds them to the window 
 	 */
 	private void addPublisher() {
-		// Place the address label
+		// Place the publisher label
 		JLabel label = new JLabel("Enter Publisher: ");
 		c.gridwidth = GridBagConstraints.RELATIVE;
 		c.insets = new Insets(0, 10, 5, 0);
@@ -194,7 +194,7 @@ public class NewBook {
 		gb.setConstraints(label, c);
 		contentPane.add(label);
 
-		// Place the text field for the address
+		// Place the text field for the publisher
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(0, 0, 5, 10);
 		gb.setConstraints(publisherField, c);
@@ -205,7 +205,7 @@ public class NewBook {
 	 * Builds the Year field and label and adds them to the window 
 	 */
 	private void addYear() {
-		// Place the phone label
+		// Place the year label
 		JLabel label = new JLabel("Enter Publication Year: ");
 		c.gridwidth = GridBagConstraints.RELATIVE;
 		c.insets = new Insets(0, 10, 5, 0);
@@ -213,7 +213,7 @@ public class NewBook {
 		gb.setConstraints(label, c);
 		contentPane.add(label);
 
-		// Place the text field for the phone
+		// Place the text field for the year
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(0, 0, 5, 10);
 		gb.setConstraints(yearField, c);
