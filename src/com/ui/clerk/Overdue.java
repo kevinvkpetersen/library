@@ -16,9 +16,14 @@ import java.awt.event.WindowEvent;
 import java.sql.Date;
 import java.sql.SQLException;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
 
-import com.borrower.Borrower;
 import com.borrower.BorrowerType;
 import com.date.DateParser;
 
@@ -66,12 +71,9 @@ public class Overdue {
 				int sinOrStNo = Integer.parseInt(sinField.getText());
 				
 				String dateString = expiryField.getText();
-				Date expiryDate = (dateString.isEmpty() ? null : DateParser.parseString(dateString)); 
+				Date expiryDate = (dateString.isEmpty() ? null : DateParser.convertToDate(dateString)); 
 				
-				BorrowerType type = BorrowerType.getBorrowerType(typeField.getText());
-				
-				Borrower.addBorrower(bid, password, name, address, phone,
-						emailAddress, sinOrStNo, expiryDate, type);
+				BorrowerType type = BorrowerType.get(typeField.getText());
 				
 				System.out.print("Borrower added!");
 				bidField.setText("");

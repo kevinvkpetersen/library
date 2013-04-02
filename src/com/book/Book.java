@@ -22,7 +22,7 @@ public class Book {
 	private static Connection con = Main.con;  
 	
 	private int callNumber;
-	private int isbn;
+	private float isbn;
 	private String title;
 	private String mainAuthor;
 	private String publisher;
@@ -45,7 +45,7 @@ public class Book {
 	 * @param year
 	 *            Book's publishing year
 	 */
-	private Book(int callNumber, int isbn, String title, String mainAuthor,
+	private Book(int callNumber, float isbn, String title, String mainAuthor,
 			String publisher, int year) {
 		this.callNumber = callNumber;
 		this.isbn = isbn;
@@ -54,6 +54,30 @@ public class Book {
 		this.publisher = publisher;
 		this.year = year;
 	 }
+	
+	/**
+	 * Generates a new entry in the Book table
+	 * @return A new Book object with default values.
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	public static Book generate() throws SQLException {
+		int callNumber;
+		
+		try {
+			PreparedStatement ps = con.prepareStatement("SELECT MAX(callNumber) as maxCallNumber FROM Book");
+			ResultSet r = ps.executeQuery();
+			
+			callNumber = (r.next() ? r.getInt("maxCallNumber") : 0);
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			throw sql;
+		}
+		
+		return add(callNumber + 1, 0, "a", "a", "a", 0);
+	}
 	
 	/**
 	 * Add a book to the Book table.
@@ -76,13 +100,13 @@ public class Book {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	public static Book addBook(int callNumber, int isbn, String title,
+	private static Book add(int callNumber, int isbn, String title,
 			String mainAuthor, String publisher, int year) throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("INSERT INTO Book VALUES (?,?,?,?,?,?)");
 			
 			ps.setInt(1, callNumber);
-			ps.setInt(2, isbn);
+			ps.setFloat(2, isbn);
 			ps.setString(3, title);
 			ps.setString(4, mainAuthor);
 			ps.setString(5, publisher);
@@ -111,7 +135,7 @@ public class Book {
 	 * Looks up the entry for the given key in the Book table and returns
 	 * the corresponding object.
 	 * 
-	 * @param key
+	 * @param callNumber
 	 *            The primary key used to look up the entry
 	 * @return A Book object representing the entry with the given key
 	 * @throws SQLException
@@ -119,16 +143,18 @@ public class Book {
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static Book getBook(int key) throws SQLException {
+	public static Book get(int callNumber) throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("SELECT * FROM Book WHERE callNumber=?");
-			ps.setInt(1, key);
-			
+			ps.setInt(1, callNumber);
 			ps.setMaxRows(1);
 			ResultSet r = ps.executeQuery();
-			r.next();
 			
-			return parseLine(r);
+			if(r.next()) {
+				return parseLine(r);
+			} else {
+				throw new SQLException("No such Book.");
+			}
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			throw sql;
@@ -145,7 +171,7 @@ public class Book {
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static List<Book> getAllBooks() throws SQLException {
+	public static List<Book> getAll() throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("SELECT * FROM Book");
 			ResultSet r = ps.executeQuery();
@@ -175,7 +201,7 @@ public class Book {
 	 */
 	private static Book parseLine(ResultSet r) throws SQLException {
 		int callNumber = r.getInt("callNumber");
-		int isbn = r.getInt("isbn");
+		float isbn = r.getFloat("isbn");
 		String title = r.getString("title");
 		String mainAuthor = r.getString("mainAuthor");
 		
@@ -215,6 +241,37 @@ public class Book {
 			throw sql;
 		}
 	}
+	
+	/**
+	 * Searches the BookCopy table for a copy of this book that's "in"
+	 * 
+	 * @return An available BookCopy object
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	public BookCopy findAvailableCopy() throws SQLException {
+		int copyNo;
+		
+		try {
+			PreparedStatement ps = con.prepareStatement("SELECT copyNo FROM BookCopy WHERE callNumber=? AND status='in'");
+			ps.setInt(1, this.callNumber);
+			ResultSet r = ps.executeQuery();
+			
+			if(r.next()) {
+				copyNo = r.getInt("copyNo");
+			} else {
+				throw new SQLException("No available copies.");
+			} 
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			throw sql;
+		}
+		
+
+		return BookCopy.get(this, copyNo);
+	}
 
 	/**
 	 * @return Primary key id number for this book
@@ -224,44 +281,9 @@ public class Book {
 	}
 
 	/**
-	 * Updates this object and the Book table
-	 * 
-	 * @param callNumber
-	 *            Primary key id number for this book
-	 * @throws SQLException
-	 *             if a database access error occurs; this method is called on a
-	 *             closed PreparedStatement or the SQL statement returns a
-	 *             ResultSet object
-	 */
-	public void setCallNumber(int callNumber) throws SQLException {
-		try {
-			PreparedStatement ps = con.prepareStatement("UPDATE Book SET callNumber=? WHERE callNumber=?");
-			ps.setInt(2, this.callNumber);
-			
-			ps.setInt(1, callNumber);
-			
-			ps.executeUpdate();
-			con.commit();
-			ps.close();
-			
-			this.callNumber = callNumber;
-		} catch (SQLException sql) {
-			System.out.println("Message: " + sql.getMessage());
-			try {
-				// Undo
-				con.rollback();
-			} catch (SQLException sql2) {
-				System.out.println("Message: " + sql2.getMessage());
-				System.exit(-1);
-			}
-			throw sql;
-		}
-	}
-
-	/**
 	 * @return This book's ISBN number
 	 */
-	public int getIsbn() {
+	public float getIsbn() {
 		return this.isbn;
 	}
 
@@ -275,12 +297,12 @@ public class Book {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	public void setIsbn(int isbn) throws SQLException {
+	public void setIsbn(float isbn) throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("UPDATE Book SET isbn=? WHERE callNumber=?");
 			ps.setInt(2, this.callNumber);
 			
-			ps.setInt(1, isbn);
+			ps.setFloat(1, isbn);
 			
 			ps.executeUpdate();
 			con.commit();

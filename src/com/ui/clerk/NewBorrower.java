@@ -37,7 +37,6 @@ public class NewBorrower {
 	private static final int FIELD_WIDTH = 30;
 	private final int LABEL_ALIGNMENT = GridBagConstraints.LINE_START;
 	
-	private JTextField bidField = new JTextField(FIELD_WIDTH);
 	private JPasswordField passwordField = new JPasswordField(FIELD_WIDTH);
 	private JTextField nameField = new JTextField(FIELD_WIDTH);
 	private JTextField addressField = new JTextField(FIELD_WIDTH);
@@ -50,7 +49,6 @@ public class NewBorrower {
 	private ActionListener submitAction = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			try {
-				int bid = Integer.parseInt(bidField.getText());
 				String password = String.valueOf(passwordField.getPassword()); 
 				String name = nameField.getText();
 				
@@ -58,23 +56,29 @@ public class NewBorrower {
 				address = (address.isEmpty() ? null : address);
 				
 				String phoneString = phoneField.getText();
-				int phone = (phoneString.isEmpty() ? 0 : Integer.parseInt(phoneString));
+				float phone = (phoneString.isEmpty() ? 0 : Float.parseFloat(phoneString));
 				
 				String emailAddress = emailField.getText();
 				emailAddress = (emailAddress.isEmpty() ? null : emailAddress);
 				
-				int sinOrStNo = Integer.parseInt(sinField.getText());
+				float sinOrStNo = Float.parseFloat(sinField.getText());
 				
 				String dateString = expiryField.getText();
-				Date expiryDate = (dateString.isEmpty() ? null : DateParser.parseString(dateString)); 
+				Date expiryDate = (dateString.isEmpty() ? null : DateParser.convertToDate(dateString)); 
 				
-				BorrowerType type = BorrowerType.getBorrowerType(typeField.getText());
+				BorrowerType type = BorrowerType.get(typeField.getText());
 				
-				Borrower.addBorrower(bid, password, name, address, phone,
-						emailAddress, sinOrStNo, expiryDate, type);
+				Borrower b = Borrower.generate();
+				b.setPassword(password);
+				b.setName(name);
+				b.setAddress(address);
+				b.setPhone(phone);
+				b.setEmailAddress(emailAddress);
+				b.setSinOrStNo(sinOrStNo);
+				b.setExpiryDate(expiryDate);
+				b.setType(type);
 				
-				System.out.print("Borrower added!");
-				bidField.setText("");
+				System.out.println("Borrower #" + b.getBid() + " added!");
 				passwordField.setText("");
 				nameField.setText("");
 				addressField.setText("");
@@ -84,7 +88,7 @@ public class NewBorrower {
 				expiryField.setText("");
 				typeField.setText("");
 			} catch (SQLException sql) {
-				System.out.print("Could not add Borrower.");
+				System.out.println("Could not add Borrower.");
 			}
 		}
 	};
@@ -99,7 +103,6 @@ public class NewBorrower {
 	 */
 	public NewBorrower() {
 		initializePane();
-		addBid();
 		addPassword();
 		addName();
 		addAddress();
@@ -128,32 +131,13 @@ public class NewBorrower {
 	}
 
 	/**
-	 * Builds the bid field and label and adds them to the window 
-	 */
-	private void addBid() {
-		// Place the bid label
-		JLabel label = new JLabel("Enter Borrower ID*: ");
-		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(10, 10, 5, 0);
-		c.anchor = LABEL_ALIGNMENT;
-		gb.setConstraints(label, c);
-		contentPane.add(label);
-
-		// Place the text field for the bid
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(10, 0, 5, 10);
-		gb.setConstraints(bidField, c);
-		contentPane.add(bidField);
-	}
-	
-	/**
 	 * Builds the password field and label and adds them to the window 
 	 */
 	private void addPassword() {
 		// Place password label
 		JLabel label = new JLabel("Enter Password*: ");
 		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(0, 10, 5, 0);
+		c.insets = new Insets(10, 10, 5, 0);
 		c.anchor = LABEL_ALIGNMENT;
 		gb.setConstraints(label, c);
 		contentPane.add(label);
@@ -161,7 +145,7 @@ public class NewBorrower {
 		// Place the password field
 		passwordField.setEchoChar('*');
 		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(0, 0, 5, 10);
+		c.insets = new Insets(10, 0, 5, 10);
 		gb.setConstraints(passwordField, c);
 		contentPane.add(passwordField);
 	}
@@ -343,7 +327,7 @@ public class NewBorrower {
 		// make the window visible
 		frame.setVisible(true);
 
-		// place the cursor in the text field for the username
-		bidField.requestFocus();
+		// place the cursor in the text field for the password
+		passwordField.requestFocus();
 	}
 }

@@ -55,6 +55,32 @@ public class Borrowing {
 	}
 	
 	/**
+	 * Generates a new entry in the Borrowing table
+	 * @return A new Borrowing object with default values.
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	public static Borrowing generate() throws SQLException {
+		int borid;
+		
+		try {
+			PreparedStatement ps = con.prepareStatement("SELECT MAX(borid) as maxBorid FROM Borrowing");
+			ResultSet r = ps.executeQuery();
+			
+			borid = (r.next() ? r.getInt("maxBorid") : 0);
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			throw sql;
+		}
+		
+		Borrower bid = Borrower.getAll().get(0);
+		BookCopy callNumber = BookCopy.getAll().get(0);
+		return add(borid + 1, bid, callNumber, new Date(0), new Date(0));
+	}
+	
+	/**
 	 * Add a borrow record to the Borrowing table.
 	 * 
 	 * @param borid
@@ -73,8 +99,8 @@ public class Borrowing {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	public static Borrowing addBorrowing(int borid, Borrower bid,
-			BookCopy callNumber, Date outDate, Date inDate) throws SQLException {
+	private static Borrowing add(int borid, Borrower bid, BookCopy callNumber,
+			Date outDate, Date inDate) throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("INSERT INTO Borrowing VALUES (?,?,?,?,?,?)");
 			
@@ -108,7 +134,7 @@ public class Borrowing {
 	 * Looks up the entry for the given key in the Borrowing table and returns
 	 * the corresponding object.
 	 * 
-	 * @param key
+	 * @param borid
 	 *            The primary key used to look up the entry
 	 * @return A Borrowing object representing the entry with the given key
 	 * @throws SQLException
@@ -116,16 +142,18 @@ public class Borrowing {
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static Borrowing getBorrowing(int key) throws SQLException {
+	public static Borrowing get(int borid) throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("SELECT * FROM Borrowing WHERE borid=?");
-			ps.setInt(1, key);
-			
+			ps.setInt(1, borid);
 			ps.setMaxRows(1);
 			ResultSet r = ps.executeQuery();
-			r.next();
 			
-			return parseLine(r);
+			if(r.next()) {
+				return parseLine(r);
+			} else {
+				throw new SQLException("No such Borrow record.");
+			}
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			throw sql;
@@ -142,7 +170,7 @@ public class Borrowing {
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static List<Borrowing> getAllBorrowings() throws SQLException {
+	public static List<Borrowing> getAll() throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("SELECT * FROM Borrowing");
 			ResultSet r = ps.executeQuery();
@@ -172,10 +200,10 @@ public class Borrowing {
 	 */
 	private static Borrowing parseLine(ResultSet r) throws SQLException {
 		int borid = r.getInt("borid");
-		Borrower bid = Borrower.getBorrower(r.getInt("bid"));
+		Borrower bid = Borrower.get(r.getInt("bid"));
 		
-		Book b = Book.getBook(r.getInt("callNumber"));
-		BookCopy callNumber = BookCopy.getBookCopy(b, r.getInt("copyNo"));
+		Book b = Book.get(r.getInt("callNumber"));
+		BookCopy callNumber = BookCopy.get(b, r.getInt("copyNo"));
 		
 		Date outDate = r.getDate("outDate");
 		Date inDate = r.getDate("inDate");
@@ -217,41 +245,6 @@ public class Borrowing {
 	 */
 	public int getBorid() {
 		return this.borid;
-	}
-
-	/**
-	 * Updates this object and the Borrowing table
-	 * 
-	 * @param borid
-	 *            Primary key id number for this borrow
-	 * @throws SQLException
-	 *             if a database access error occurs; this method is called on a
-	 *             closed PreparedStatement or the SQL statement returns a
-	 *             ResultSet object
-	 */
-	public void setBorid(int borid) throws SQLException {
-		try {
-			PreparedStatement ps = con.prepareStatement("UPDATE Borrowing SET borid=? WHERE borid=?");
-			ps.setInt(2, this.borid);
-			
-			ps.setInt(1, borid);
-			
-			ps.executeUpdate();
-			con.commit();
-			ps.close();
-			
-			this.borid = borid;
-		} catch (SQLException sql) {
-			System.out.println("Message: " + sql.getMessage());
-			try {
-				// Undo
-				con.rollback();
-			} catch (SQLException sql2) {
-				System.out.println("Message: " + sql2.getMessage());
-				System.exit(-1);
-			}
-			throw sql;
-		}
 	}
 
 	/**

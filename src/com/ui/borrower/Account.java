@@ -66,12 +66,9 @@ public class Account {
 				int sinOrStNo = Integer.parseInt(sinField.getText());
 				
 				String dateString = expiryField.getText();
-				Date expiryDate = (dateString.isEmpty() ? null : DateParser.parseString(dateString)); 
+				Date expiryDate = (dateString.isEmpty() ? null : DateParser.convertToDate(dateString)); 
 				
-				BorrowerType type = BorrowerType.getBorrowerType(typeField.getText());
-				
-				Borrower.addBorrower(bid, password, name, address, phone,
-						emailAddress, sinOrStNo, expiryDate, type);
+				BorrowerType type = BorrowerType.get(typeField.getText());
 				
 				System.out.print("Borrower added!");
 				bidField.setText("");
@@ -88,7 +85,7 @@ public class Account {
 			}
 		}
 	};
-	private ActionListener cancelAction = new ActionListener() {
+	private ActionListener closeAction = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			frame.dispose();	
 		}
@@ -109,7 +106,7 @@ public class Account {
 		addExpiry();
 		addType();
 		addSubmitButton();
-		addCancelButton();
+		addCloseButton();
 	}
 	
 	/**
@@ -316,7 +313,7 @@ public class Account {
 	/**
 	 * Builds the cancel button and adds it to the window 
 	 */
-	private void addCancelButton() {
+	private void addCloseButton() {
 		// Place the cancel button
 		JButton button = new JButton("Cancel");
 		c.gridwidth = GridBagConstraints.REMAINDER;
@@ -324,7 +321,7 @@ public class Account {
 		c.anchor = GridBagConstraints.LINE_END;
 		gb.setConstraints(button, c);
 		contentPane.add(button);
-		button.addActionListener(this.cancelAction);
+		button.addActionListener(this.closeAction);
 	}
 	
 	/**

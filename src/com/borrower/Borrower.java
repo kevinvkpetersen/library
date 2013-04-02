@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.Main;
+import com.date.DateParser;
 
 /**
  * Representation of a borrower as described by Borrower in tables.sql.
@@ -26,9 +27,9 @@ public class Borrower {
 	private String password;
 	private String name;
 	private String address;
-	private int phone;
+	private float phone;
 	private String emailAddress;
-	private int sinOrStNo;
+	private float sinOrStNo;
 	private Date expiryDate;
 	private BorrowerType type;
 
@@ -56,8 +57,8 @@ public class Borrower {
 	 *            Foreign Key string describing type of borrower
 	 */
 	private Borrower(int bid, String password,
-			String name, String address, int phone, String email,
-			int sinOrStNo, Date expiryDate, BorrowerType type) {
+			String name, String address, float phone, String email,
+			float sinOrStNo, Date expiryDate, BorrowerType type) {
 		this.bid = bid;
 		this.password = password;
 		this.name = name;
@@ -67,6 +68,31 @@ public class Borrower {
 		this.sinOrStNo = sinOrStNo;
 		this.expiryDate = expiryDate;
 		this.type = type;
+	}
+	
+	/**
+	 * Generates a new entry in the Borrower table
+	 * @return A new Borrower object with default values.
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	public static Borrower generate() throws SQLException {
+		int bid;
+		
+		try {
+			PreparedStatement ps = con.prepareStatement("SELECT MAX(bid) as maxBid FROM Borrower");
+			ResultSet r = ps.executeQuery();
+			
+			bid = (r.next() ? r.getInt("maxBid") : 0);
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			throw sql;
+		}
+		
+		BorrowerType type = BorrowerType.getAll().get(0);
+		return add(bid + 1, "a", "a", "a", 0, "a", 0, new Date(0), type);
 	}
 	
 	/**
@@ -96,8 +122,8 @@ public class Borrower {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	public static Borrower addBorrower(int bid, String password, String name,
-			String address, int phone, String emailAddress, int sinOrStNo,
+	private static Borrower add(int bid, String password, String name,
+			String address, float phone, String emailAddress, float sinOrStNo,
 			Date expiryDate, BorrowerType type) throws SQLException {
 		
 		try {
@@ -107,9 +133,9 @@ public class Borrower {
 			ps.setString(2, password);
 			ps.setString(3, name);
 			ps.setString(4, address);
-			ps.setInt(5, phone);
+			ps.setFloat(5, phone);
 			ps.setString(6, emailAddress);
-			ps.setInt(7, sinOrStNo);
+			ps.setFloat(7, sinOrStNo);
 			ps.setDate(8, expiryDate);
 			ps.setString(9, type.getType());
 			
@@ -137,7 +163,7 @@ public class Borrower {
 	 * Looks up the entry for the given key in the Borrower table and returns
 	 * the corresponding object.
 	 * 
-	 * @param key
+	 * @param bid
 	 *            The primary key used to look up the entry
 	 * @return A Borrower object representing the entry with the given key
 	 * @throws SQLException
@@ -145,16 +171,18 @@ public class Borrower {
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static Borrower getBorrower(int key) throws SQLException {
+	public static Borrower get(int bid) throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("SELECT * FROM Borrower WHERE bid=?");
-			ps.setInt(1, key);
-			
+			ps.setInt(1, bid);
 			ps.setMaxRows(1);
 			ResultSet r = ps.executeQuery();
-			r.next();
 			
-			return parseLine(r);
+			if(r.next()) {
+				return parseLine(r);
+			} else {
+				throw new SQLException("No such Borrower.");
+			}
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			throw sql;
@@ -171,7 +199,7 @@ public class Borrower {
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static List<Borrower> getAllBorrowers() throws SQLException {
+	public static List<Borrower> getAll() throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("SELECT * FROM Borrower");
 			ResultSet r = ps.executeQuery();
@@ -207,18 +235,18 @@ public class Borrower {
 		String address = r.getString("address");
 		address = (r.wasNull() ? null : address);
 		
-		int phone = r.getInt("phone");
+		float phone = r.getFloat("phone");
 		phone = (r.wasNull() ? null : phone);
 		
 		String emailAddress = r.getString("emailAddress");
 		emailAddress = (r.wasNull() ? null : emailAddress);
 		
-		int sinOrStNo = r.getInt("sinOrStNo");
+		float sinOrStNo = r.getFloat("sinOrStNo");
 		
 		Date expiryDate = r.getDate("expiryDate");
 		expiryDate = (r.wasNull() ? null : expiryDate);
 		
-		BorrowerType type = BorrowerType.getBorrowerType(r.getString("type"));
+		BorrowerType type = BorrowerType.get(r.getString("type"));
 		
 		return new Borrower(bid, password, name, address, phone,
 				emailAddress, sinOrStNo, expiryDate, type);
@@ -252,47 +280,21 @@ public class Borrower {
 			throw sql;
 		}
 	}
+	
+	/**
+	 * Determines if this borrower is eligible to borrow books.
+	 * 
+	 * @return True if expiryDate has not passed.
+	 */
+	public boolean isValid() {
+		return this.expiryDate.after(DateParser.today());
+	}
 
 	/**
 	 * @return Primary key id number for this borrower
 	 */
 	public int getBid() {
 		return this.bid;
-	}
-
-	/**
-	 * Updates this object and the Borrower table
-	 * 
-	 * @param bid
-	 *            Primary key id number for this borrower
-	 * @throws SQLException
-	 *             if a database access error occurs; this method is called on a
-	 *             closed PreparedStatement or the SQL statement returns a
-	 *             ResultSet object
-	 */
-	public void setBid(int bid) throws SQLException {
-		try {
-			PreparedStatement ps = con.prepareStatement("UPDATE Borrower SET bid=? WHERE bid=?");
-			ps.setInt(2, this.bid);
-			
-			ps.setInt(1, bid);
-			
-			ps.executeUpdate();
-			con.commit();
-			ps.close();
-			
-			this.bid = bid;
-		} catch (SQLException sql) {
-			System.out.println("Message: " + sql.getMessage());
-			try {
-				// Undo
-				con.rollback();
-			} catch (SQLException sql2) {
-				System.out.println("Message: " + sql2.getMessage());
-				System.exit(-1);
-			}
-			throw sql;
-		}
 	}
 
 	/**
@@ -424,7 +426,7 @@ public class Borrower {
 	/**
 	 * @return Borrower's phone number
 	 */
-	public int getPhone() {
+	public float getPhone() {
 		return this.phone;
 	}
 
@@ -438,12 +440,12 @@ public class Borrower {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	public void setPhone(int phone) throws SQLException {
+	public void setPhone(float phone) throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("UPDATE Borrower SET phone=? WHERE bid=?");
 			ps.setInt(2, this.bid);
 			
-			ps.setInt(1, phone);
+			ps.setFloat(1, phone);
 			
 			ps.executeUpdate();
 			con.commit();
@@ -508,7 +510,7 @@ public class Borrower {
 	/**
 	 * @return Borrower's student number if a student, SIN otherwise
 	 */
-	public int getSinOrStNo() {
+	public float getSinOrStNo() {
 		return this.sinOrStNo;
 	}
 
@@ -522,12 +524,12 @@ public class Borrower {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	public void setSinOrStNo(int sinOrStNo) throws SQLException {
+	public void setSinOrStNo(float sinOrStNo) throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("UPDATE Borrower SET sinOrStNo=? WHERE bid=?");
 			ps.setInt(2, this.bid);
 			
-			ps.setInt(1, sinOrStNo);
+			ps.setFloat(1, sinOrStNo);
 			
 			ps.executeUpdate();
 			con.commit();

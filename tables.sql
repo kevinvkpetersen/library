@@ -27,9 +27,9 @@ CREATE TABLE Borrower (
 	password 		VARCHAR(20)		NOT NULL,
 	name			VARCHAR(50)		NOT NULL,
 	address			VARCHAR(50),
-	phone			INTEGER,
+	phone			BIGINT,
 	emailAddress	VARCHAR(50)		UNIQUE,
-	sinOrStNo		INTEGER			UNIQUE NOT NULL,
+	sinOrStNo		BIGINT			UNIQUE NOT NULL,
 	expiryDate		DATE,
 	type			VARCHAR(10)		NOT NULL,
 	PRIMARY KEY		(bid),
@@ -41,7 +41,7 @@ INSERT INTO Borrower VALUES	(2, 'qwerty', 'Kevin P.', 'North Burnaby', 778997553
 
 CREATE TABLE Book (
 	callNumber		INTEGER			NOT NULL,
-	isbn			INTEGER			UNIQUE NOT NULL,
+	isbn			BIGINT			UNIQUE NOT NULL,
 	title			VARCHAR(50)		NOT NULL,
 	mainAuthor		VARCHAR(50)		NOT NULL,
 	publisher		VARCHAR(50),
@@ -49,9 +49,9 @@ CREATE TABLE Book (
 	PRIMARY KEY		(callNumber)
 );
 
-INSERT INTO Book VALUES (12345, 12345, 'SQL for Dummies', 'Kevin Petersen', 'Code 4 U inc.', 2010);
-INSERT INTO Book VALUES (23456, 23456, 'Java for Dummies', 'Kevin Petersen', 'Code 4 U inc.', 2011);
-INSERT INTO Book VALUES (34567, 34567, 'Java for Fools!', 'Alec', 'Coders R Us', 2011);
+INSERT INTO Book VALUES (1, 12345, 'SQL for Dummies', 'Kevin Petersen', 'Code 4 U inc.', 2010);
+INSERT INTO Book VALUES (2, 23456, 'Java for Dummies', 'Kevin Petersen', 'Code 4 U inc.', 2011);
+INSERT INTO Book VALUES (3, 34567, 'Java for Fools!', 'Alec', 'Coders R Us', 2011);
 
 CREATE TABLE BookCopy (
 	callNumber		INTEGER			NOT NULL,
@@ -61,12 +61,12 @@ CREATE TABLE BookCopy (
 	FOREIGN KEY		(callNumber)	REFERENCES Book
 );
 
-INSERT INTO BookCopy VALUES (12345, 1, 'in');
-INSERT INTO BookCopy VALUES (23456, 1, 'in');
-INSERT INTO BookCopy VALUES (23456, 2, 'in');
-INSERT INTO BookCopy VALUES (23456, 3, 'out');
-INSERT INTO BookCopy VALUES (34567, 1, 'on-hold');
-INSERT INTO BookCopy VALUES (34567, 2, 'in');
+INSERT INTO BookCopy VALUES (1, 1, 'in');
+INSERT INTO BookCopy VALUES (2, 1, 'in');
+INSERT INTO BookCopy VALUES (2, 2, 'in');
+INSERT INTO BookCopy VALUES (2, 3, 'out');
+INSERT INTO BookCopy VALUES (3, 1, 'on-hold');
+INSERT INTO BookCopy VALUES (3, 2, 'in');
 
 CREATE TABLE HasAuthor (
 	callNumber		INTEGER			NOT NULL,
@@ -75,10 +75,10 @@ CREATE TABLE HasAuthor (
 	FOREIGN KEY		(callNumber)	REFERENCES Book
 );
 
-INSERT INTO HasAuthor VALUES (12345, 'Kevin Petersen');
-INSERT INTO HasAuthor VALUES (23456, 'Kevin Petersen');
-INSERT INTO HasAuthor VALUES (23456, 'Alec');
-INSERT INTO HasAuthor VALUES (34567, 'Alec');
+INSERT INTO HasAuthor VALUES (1, 'Kevin Petersen');
+INSERT INTO HasAuthor VALUES (2, 'Kevin Petersen');
+INSERT INTO HasAuthor VALUES (2, 'Alec');
+INSERT INTO HasAuthor VALUES (3, 'Alec');
 
 CREATE TABLE HasSubject (
 	callNumber		INTEGER			NOT NULL,
@@ -87,12 +87,12 @@ CREATE TABLE HasSubject (
 	FOREIGN KEY		(callNumber)	REFERENCES Book
 );
 
-INSERT INTO HasSubject VALUES (12345, 'SQL');
-INSERT INTO HasSubject VALUES (12345, 'Code');
-INSERT INTO HasSubject VALUES (23456, 'Java');
-INSERT INTO HasSubject VALUES (23456, 'Code');
-INSERT INTO HasSubject VALUES (34567, 'Java');
-INSERT INTO HasSubject VALUES (34567, 'Code');
+INSERT INTO HasSubject VALUES (1, 'SQL');
+INSERT INTO HasSubject VALUES (1, 'Code');
+INSERT INTO HasSubject VALUES (2, 'Java');
+INSERT INTO HasSubject VALUES (2, 'Code');
+INSERT INTO HasSubject VALUES (3, 'Java');
+INSERT INTO HasSubject VALUES (3, 'Code');
 
 CREATE TABLE HoldRequest(
 	hid				INTEGER			NOT NULL,
@@ -104,7 +104,7 @@ CREATE TABLE HoldRequest(
 	FOREIGN KEY		(callNumber)	REFERENCES Book
 );
 
-INSERT INTO HoldRequest VALUES (1, 1, 34567, '2013-03-14');
+INSERT INTO HoldRequest VALUES (1, 1, 3, '2013-03-14');
 
 CREATE TABLE Borrowing(
 	borid			INTEGER			NOT NULL,
@@ -118,7 +118,7 @@ CREATE TABLE Borrowing(
 	FOREIGN KEY		(callNumber, copyNo) REFERENCES BookCopy
 );
 
-INSERT INTO Borrowing VALUES (1, 2, 23456, 3, '2012-01-01', '2013-01-01');
+INSERT INTO Borrowing VALUES (1, 2, 2, 3, '2012-01-01', '2013-01-01');
 
 CREATE TABLE Fine (
 	fid				INTEGER			NOT NULL,

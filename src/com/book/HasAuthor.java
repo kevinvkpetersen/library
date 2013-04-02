@@ -51,7 +51,7 @@ public class HasAuthor {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	public static HasAuthor addHasAuthor(Book callNumber, String name) throws SQLException {
+	public static HasAuthor add(Book callNumber, String name) throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("INSERT INTO HasAuthor VALUES (?,?)");
 			
@@ -91,7 +91,7 @@ public class HasAuthor {
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static HasAuthor getHasAuthor(Book callNumber, String name) throws SQLException {
+	public static HasAuthor get(Book callNumber, String name) throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("SELECT * FROM HasAuthor WHERE callNumber=? AND name=?");
 			ps.setInt(1, callNumber.getCallNumber());
@@ -99,9 +99,12 @@ public class HasAuthor {
 			
 			ps.setMaxRows(1);
 			ResultSet r = ps.executeQuery();
-			r.next();
 			
-			return parseLine(r);
+			if(r.next()) {
+				return parseLine(r);
+			} else {
+				throw new SQLException("No such Book-Author relation.");
+			}
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			throw sql;
@@ -118,7 +121,7 @@ public class HasAuthor {
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static List<HasAuthor> getAllHasAuthors() throws SQLException {
+	public static List<HasAuthor> getAll() throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("SELECT * FROM HasAuthor");
 			ResultSet r = ps.executeQuery();
@@ -147,7 +150,7 @@ public class HasAuthor {
 	 *             occurs or this method is called on a closed result set
 	 */
 	private static HasAuthor parseLine(ResultSet r) throws SQLException {
-		Book callNumber = Book.getBook(r.getInt("callNumber"));
+		Book callNumber = Book.get(r.getInt("callNumber"));
 		String name = r.getString("name");
 		
 		return new HasAuthor(callNumber, name);

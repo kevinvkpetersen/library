@@ -52,6 +52,31 @@ public class Fine {
 	}
 	
 	/**
+	 * Generates a new entry in the Fine table
+	 * @return A new Fine object with default values.
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	public static Fine generate() throws SQLException {
+		int fid;
+		
+		try {
+			PreparedStatement ps = con.prepareStatement("SELECT MAX(fid) as maxFid FROM Fine");
+			ResultSet r = ps.executeQuery();
+			
+			fid = (r.next() ? r.getInt("maxFid") : 0);
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			throw sql;
+		}
+		
+		Borrowing borid = Borrowing.getAll().get(0);
+		return add(fid + 1, 0, new Date(0), new Date(0), borid);
+	}
+	
+	/**
 	 * Add a fine to the Fine table.
 	 * 
 	 * @param fid
@@ -70,7 +95,7 @@ public class Fine {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	public static Fine addFine(int fid, float amount, Date issuedDate, Date paidDate, Borrowing borid) throws SQLException {
+	private static Fine add(int fid, float amount, Date issuedDate, Date paidDate, Borrowing borid) throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("INSERT INTO Fine VALUES (?,?,?,?,?)");
 			
@@ -103,7 +128,7 @@ public class Fine {
 	 * Looks up the entry for the given key in the Fine table and returns
 	 * the corresponding object.
 	 * 
-	 * @param key
+	 * @param fid
 	 *            The primary key used to look up the entry
 	 * @return A Fine object representing the entry with the given key
 	 * @throws SQLException
@@ -111,16 +136,18 @@ public class Fine {
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static Fine getFine(int key) throws SQLException {
+	public static Fine get(int fid) throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("SELECT * FROM Fine WHERE fid=?");
-			ps.setInt(1, key);
-			
+			ps.setInt(1, fid);
 			ps.setMaxRows(1);
 			ResultSet r = ps.executeQuery();
-			r.next();
 			
-			return parseLine(r);
+			if(r.next()) {
+				return parseLine(r);
+			} else {
+				throw new SQLException("No such Fine.");
+			}
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			throw sql;
@@ -137,7 +164,7 @@ public class Fine {
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static List<Fine> getAllFines() throws SQLException {
+	public static List<Fine> getAll() throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("SELECT * FROM Fine");
 			ResultSet r = ps.executeQuery();
@@ -170,7 +197,7 @@ public class Fine {
 		float amount = r.getFloat("amount");
 		Date issuedDate = r.getDate("issuedDate");
 		Date paidDate = r.getDate("paidDate");
-		Borrowing borid = Borrowing.getBorrowing(r.getInt("borid"));
+		Borrowing borid = Borrowing.get(r.getInt("borid"));
 		
 		return new Fine(fid, amount, issuedDate, paidDate, borid);
 	}
@@ -209,41 +236,6 @@ public class Fine {
 	 */
 	public int getFid() {
 		return this.fid;
-	}
-
-	/**
-	 * Updates this object and the Fine table
-	 * 
-	 * @param fid
-	 *            Primary key id number for this fine
-	 * @throws SQLException
-	 *             if a database access error occurs; this method is called on a
-	 *             closed PreparedStatement or the SQL statement returns a
-	 *             ResultSet object
-	 */
-	public void setFid(int fid) throws SQLException {
-		try {
-			PreparedStatement ps = con.prepareStatement("UPDATE Fine SET fid=? WHERE fid=?");
-			ps.setInt(2, this.fid);
-			
-			ps.setInt(1, fid);
-			
-			ps.executeUpdate();
-			con.commit();
-			ps.close();
-			
-			this.fid = fid;
-		} catch (SQLException sql) {
-			System.out.println("Message: " + sql.getMessage());
-			try {
-				// Undo
-				con.rollback();
-			} catch (SQLException sql2) {
-				System.out.println("Message: " + sql2.getMessage());
-				System.exit(-1);
-			}
-			throw sql;
-		}
 	}
 
 	/**

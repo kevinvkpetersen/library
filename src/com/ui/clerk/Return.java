@@ -66,12 +66,9 @@ public class Return {
 				int sinOrStNo = Integer.parseInt(sinField.getText());
 				
 				String dateString = expiryField.getText();
-				Date expiryDate = (dateString.isEmpty() ? null : DateParser.parseString(dateString)); 
+				Date expiryDate = (dateString.isEmpty() ? null : DateParser.convertToDate(dateString)); 
 				
-				BorrowerType type = BorrowerType.getBorrowerType(typeField.getText());
-				
-				Borrower.addBorrower(bid, password, name, address, phone,
-						emailAddress, sinOrStNo, expiryDate, type);
+				BorrowerType type = BorrowerType.get(typeField.getText());
 				
 				System.out.print("Borrower added!");
 				bidField.setText("");

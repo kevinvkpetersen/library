@@ -13,14 +13,21 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.sql.Date;
 import java.sql.SQLException;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
+import com.book.Book;
+import com.book.BookCopy;
+import com.book.records.Borrowing;
 import com.borrower.Borrower;
-import com.borrower.BorrowerType;
 import com.date.DateParser;
+
 
 /**
  * This class implements a graphical login window to connect to the Oracle
@@ -29,62 +36,54 @@ import com.date.DateParser;
  * @author Kevin Petersen
  */
 public class Checkout {
-	private JFrame frame = new JFrame("New Borrower");
+	private JFrame frame = new JFrame("Check Out");
 	private JPanel contentPane = new JPanel();
 	private GridBagLayout gb = new GridBagLayout();
 	private GridBagConstraints c = new GridBagConstraints();
 	
-	private static final int FIELD_WIDTH = 30;
+	private final int FIELD_WIDTH = 30;
 	private final int LABEL_ALIGNMENT = GridBagConstraints.LINE_START;
+	private final int NUM_BOOK_FIELDS = 5;
+	
 	
 	private JTextField bidField = new JTextField(FIELD_WIDTH);
-	private JPasswordField passwordField = new JPasswordField(FIELD_WIDTH);
-	private JTextField nameField = new JTextField(FIELD_WIDTH);
-	private JTextField addressField = new JTextField(FIELD_WIDTH);
-	private JTextField phoneField = new JTextField(FIELD_WIDTH);
-	private JTextField emailField = new JTextField(FIELD_WIDTH);
-	private JTextField sinField = new JTextField(FIELD_WIDTH);
-	private JTextField expiryField = new JTextField(FIELD_WIDTH);
-	private JTextField typeField = new JTextField(FIELD_WIDTH);
+	private JTextField[] bookField = new JTextField[NUM_BOOK_FIELDS];
 	
 	private ActionListener submitAction = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			try {
-				int bid = Integer.parseInt(bidField.getText());
-				String password = String.valueOf(passwordField.getPassword()); 
-				String name = nameField.getText();
-				
-				String address = addressField.getText();
-				address = (address.isEmpty() ? null : address);
-				
-				String phoneString = phoneField.getText();
-				int phone = (phoneString.isEmpty() ? 0 : Integer.parseInt(phoneString));
-				
-				String emailAddress = emailField.getText();
-				emailAddress = (emailAddress.isEmpty() ? null : emailAddress);
-				
-				int sinOrStNo = Integer.parseInt(sinField.getText());
-				
-				String dateString = expiryField.getText();
-				Date expiryDate = (dateString.isEmpty() ? null : DateParser.parseString(dateString)); 
-				
-				BorrowerType type = BorrowerType.getBorrowerType(typeField.getText());
-				
-				Borrower.addBorrower(bid, password, name, address, phone,
-						emailAddress, sinOrStNo, expiryDate, type);
-				
-				System.out.print("Borrower added!");
-				bidField.setText("");
-				passwordField.setText("");
-				nameField.setText("");
-				addressField.setText("");
-				phoneField.setText("");
-				emailField.setText("");
-				sinField.setText("");
-				expiryField.setText("");
-				typeField.setText("");
+				Borrower bid = Borrower.get(Integer.parseInt(bidField.getText()));
+				if(bid.isValid()) {
+					Book[] callNumber = new Book[NUM_BOOK_FIELDS];
+					for(int i = 0; i < NUM_BOOK_FIELDS; i++) {
+						try {
+							String bookString = bookField[i].getText();
+							if (bookString.isEmpty()) {
+								continue;
+							}
+							
+							callNumber[i] = Book.get(Integer.parseInt(bookString));
+							BookCopy copy = callNumber[i].findAvailableCopy();
+							
+							Borrowing record = Borrowing.generate();
+							record.setBid(bid);
+							record.setCallNumber(copy);
+							record.setOutDate(DateParser.today());
+							
+							System.out.println("Copy #" + copy.getCopyNo()
+									+ " of Book with Call Number "
+									+ copy.getCallNumber().getCallNumber()
+									+ " checked out.");
+							
+							bookField[i].setText("");
+						} catch (SQLException sql) {
+							System.out.println("Could not checkout book " + (i+1));
+						}
+					}
+				} else {
+					System.out.println("Borrower is cannot borrow books.");
+				}
 			} catch (SQLException sql) {
-				System.out.print("Could not add Borrower.");
 			}
 		}
 	};
@@ -100,14 +99,9 @@ public class Checkout {
 	public Checkout() {
 		initializePane();
 		addBid();
-		addPassword();
-		addName();
-		addAddress();
-		addPhone();
-		addEmail();
-		addSin();
-		addExpiry();
-		addType();
+		for(int i = 0; i < NUM_BOOK_FIELDS; i++) {
+			addBook(i);
+		}
 		addSubmitButton();
 		addCancelButton();
 	}
@@ -134,169 +128,36 @@ public class Checkout {
 		// Place the bid label
 		JLabel label = new JLabel("Enter Borrower ID*: ");
 		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(10, 10, 5, 0);
+		c.insets = new Insets(10, 10, 10, 0);
 		c.anchor = LABEL_ALIGNMENT;
 		gb.setConstraints(label, c);
 		contentPane.add(label);
 
 		// Place the text field for the bid
 		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(10, 0, 5, 10);
+		c.insets = new Insets(10, 0, 10, 10);
 		gb.setConstraints(bidField, c);
 		contentPane.add(bidField);
 	}
 	
 	/**
-	 * Builds the password field and label and adds them to the window 
+	 * Builds the book field and label and adds them to the window 
 	 */
-	private void addPassword() {
-		// Place password label
-		JLabel label = new JLabel("Enter Password*: ");
+	private void addBook(int i) {
+		// Place the book label
+		JLabel label = new JLabel("Enter Call Number: ");
 		c.gridwidth = GridBagConstraints.RELATIVE;
 		c.insets = new Insets(0, 10, 5, 0);
 		c.anchor = LABEL_ALIGNMENT;
 		gb.setConstraints(label, c);
 		contentPane.add(label);
 
-		// Place the password field
-		passwordField.setEchoChar('*');
+		// Place the text field for the book
+		this.bookField[i] = new JTextField(FIELD_WIDTH);
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(passwordField, c);
-		contentPane.add(passwordField);
-	}
-
-	/**
-	 * Builds the name field and label and adds them to the window 
-	 */
-	private void addName() {
-		// Place the name label
-		JLabel label = new JLabel("Enter Full Name*: ");
-		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(0, 10, 5, 0);
-		c.anchor = LABEL_ALIGNMENT;
-		gb.setConstraints(label, c);
-		contentPane.add(label);
-
-		// Place the text field for the name
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(nameField, c);
-		contentPane.add(nameField);
-	}
-	
-	/**
-	 * Builds the address field and label and adds them to the window 
-	 */
-	private void addAddress() {
-		// Place the address label
-		JLabel label = new JLabel("Enter Full Address: ");
-		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(0, 10, 5, 0);
-		c.anchor = LABEL_ALIGNMENT;
-		gb.setConstraints(label, c);
-		contentPane.add(label);
-
-		// Place the text field for the address
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(addressField, c);
-		contentPane.add(addressField);
-	}
-	
-	/**
-	 * Builds the phone field and label and adds them to the window 
-	 */
-	private void addPhone() {
-		// Place the phone label
-		JLabel label = new JLabel("Enter Phone Number: ");
-		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(0, 10, 5, 0);
-		c.anchor = LABEL_ALIGNMENT;
-		gb.setConstraints(label, c);
-		contentPane.add(label);
-
-		// Place the text field for the phone
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(phoneField, c);
-		contentPane.add(phoneField);
-	}
-	
-	/**
-	 * Builds the email field and label and adds them to the window 
-	 */
-	private void addEmail() {
-		// Place the email label
-		JLabel label = new JLabel("Enter Email Address: ");
-		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(0, 10, 5, 0);
-		c.anchor = LABEL_ALIGNMENT;
-		gb.setConstraints(label, c);
-		contentPane.add(label);
-
-		// Place the text field for the email
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(emailField, c);
-		contentPane.add(emailField);
-	}
-	
-	/**
-	 * Builds the sin field and label and adds them to the window 
-	 */
-	private void addSin() {
-		// Place the sin label
-		JLabel label = new JLabel("Enter Student Number or SIN*: ");
-		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(0, 10, 5, 0);
-		c.anchor = LABEL_ALIGNMENT;
-		gb.setConstraints(label, c);
-		contentPane.add(label);
-
-		// Place the text field for the sin
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(sinField, c);
-		contentPane.add(sinField);
-	}
-	
-	/**
-	 * Builds the expiry field and label and adds them to the window 
-	 */
-	private void addExpiry() {
-		// Place the expiry label
-		JLabel label = new JLabel("Enter Expiry Date (YYYY-MM-DD): ");
-		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(0, 10, 5, 0);
-		c.anchor = LABEL_ALIGNMENT;
-		gb.setConstraints(label, c);
-		contentPane.add(label);
-
-		// Place the text field for the expiry
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(expiryField, c);
-		contentPane.add(expiryField);
-	}
-	
-	/**
-	 * Builds the type field and label and adds them to the window 
-	 */
-	private void addType() {
-		// Place the type label
-		JLabel label = new JLabel("Enter Borrower Type*: ");
-		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(0, 10, 5, 0);
-		c.anchor = LABEL_ALIGNMENT;
-		gb.setConstraints(label, c);
-		contentPane.add(label);
-
-		// Place the text field for the type
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(typeField, c);
-		contentPane.add(typeField);
+		gb.setConstraints(this.bookField[i], c);
+		contentPane.add(this.bookField[i]);
 	}
 	
 	/**

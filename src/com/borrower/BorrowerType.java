@@ -52,12 +52,12 @@ public class BorrowerType {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	public static BorrowerType addBorrowerType(String key, int bookTimeLimit)
+	public static BorrowerType add(String type, int bookTimeLimit)
 			throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("INSERT INTO BorrowerType VALUES (?,?)");
 			
-			ps.setString(1, key);
+			ps.setString(1, type);
 			ps.setInt(2, bookTimeLimit);
 			
 			// All inputs are OK
@@ -65,7 +65,7 @@ public class BorrowerType {
 			con.commit();
 			ps.close();
 			
-			return new BorrowerType(key, bookTimeLimit);
+			return new BorrowerType(type, bookTimeLimit);
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			try {
@@ -83,7 +83,7 @@ public class BorrowerType {
 	 * Looks up the entry for the given key in the BorrowerType table and
 	 * returns the corresponding object.
 	 * 
-	 * @param key
+	 * @param type
 	 *            The primary key used to look up the entry
 	 * @return A BorrowerType object representing the entry with the given key
 	 * @throws SQLException
@@ -91,16 +91,18 @@ public class BorrowerType {
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static BorrowerType getBorrowerType(String key) throws SQLException {
+	public static BorrowerType get(String type) throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("SELECT * FROM BorrowerType WHERE type=?");
-			ps.setString(1, key);
-			
+			ps.setString(1, type);
 			ps.setMaxRows(1);
 			ResultSet r = ps.executeQuery();
-			r.next();
 			
-			return parseLine(r);
+			if(r.next()) {
+				return parseLine(r);
+			} else {
+				throw new SQLException("No such Borrower Type.");
+			}
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			throw sql;
@@ -117,7 +119,7 @@ public class BorrowerType {
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static List<BorrowerType> getAllBorrowerTypes() throws SQLException {
+	public static List<BorrowerType> getAll() throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("SELECT * FROM BorrowerType");
 			ResultSet r = ps.executeQuery();

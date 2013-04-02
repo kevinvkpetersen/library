@@ -51,7 +51,7 @@ public class HasSubject {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	public static HasSubject addHasSubject(Book callNumber, String subject) throws SQLException {
+	public static HasSubject add(Book callNumber, String subject) throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("INSERT INTO HasSubject VALUES (?,?)");
 			
@@ -91,7 +91,7 @@ public class HasSubject {
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static HasSubject getHasSubject(Book callNumber, String subject) throws SQLException {
+	public static HasSubject get(Book callNumber, String subject) throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("SELECT * FROM HasSubject WHERE callNumber=? AND subject=?");
 			ps.setInt(1, callNumber.getCallNumber());
@@ -99,9 +99,12 @@ public class HasSubject {
 			
 			ps.setMaxRows(1);
 			ResultSet r = ps.executeQuery();
-			r.next();
 			
-			return parseLine(r);
+			if(r.next()) {
+				return parseLine(r);
+			} else {
+				throw new SQLException("No such Book-Subject relation.");
+			}
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			throw sql;
@@ -118,7 +121,7 @@ public class HasSubject {
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static List<HasSubject> getAllHasSubjects() throws SQLException {
+	public static List<HasSubject> getAll() throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("SELECT * FROM HasSubject");
 			ResultSet r = ps.executeQuery();
@@ -147,7 +150,7 @@ public class HasSubject {
 	 *             occurs or this method is called on a closed result set
 	 */
 	private static HasSubject parseLine(ResultSet r) throws SQLException {
-		Book callNumber = Book.getBook(r.getInt("callNumber"));
+		Book callNumber = Book.get(r.getInt("callNumber"));
 		String subject = r.getString("subject");
 		
 		return new HasSubject(callNumber, subject);

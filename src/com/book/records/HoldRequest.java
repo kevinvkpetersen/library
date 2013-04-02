@@ -50,6 +50,32 @@ public class HoldRequest {
 	}
 	
 	/**
+	 * Generates a new entry in the HoldRequest table
+	 * @return A new HoldRequest object with default values.
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	public static HoldRequest generate() throws SQLException {
+		int hid;
+		
+		try {
+			PreparedStatement ps = con.prepareStatement("SELECT MAX(hid) as maxHid FROM HoldRequest");
+			ResultSet r = ps.executeQuery();
+			
+			hid = (r.next() ? r.getInt("maxHid") : 0);
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			throw sql;
+		}
+		
+		Borrower bid = Borrower.getAll().get(0);
+		Book callNumber = Book.getAll().get(0);
+		return add(hid + 1, bid, callNumber, new Date(0));
+	}
+	
+	/**
 	 * Add a hold to the HoldRequest table.
 	 * 
 	 * @param hid
@@ -66,7 +92,7 @@ public class HoldRequest {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	public static HoldRequest addHoldRequest(int hid, Borrower bid,
+	private static HoldRequest add(int hid, Borrower bid,
 			Book callNumber, Date issuedDate) throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("INSERT INTO HoldRequest VALUES (?,?,?,?)");
@@ -99,7 +125,7 @@ public class HoldRequest {
 	 * Looks up the entry for the given key in the HoldRequest table and returns
 	 * the corresponding object.
 	 * 
-	 * @param key
+	 * @param hid
 	 *            The primary key used to look up the entry
 	 * @return A HoldRequest object representing the entry with the given key
 	 * @throws SQLException
@@ -107,16 +133,18 @@ public class HoldRequest {
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static HoldRequest getHoldRequest(int key) throws SQLException {
+	public static HoldRequest get(int hid) throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("SELECT * FROM HoldRequest WHERE hid=?");
-			ps.setInt(1, key);
-			
+			ps.setInt(1, hid);
 			ps.setMaxRows(1);
 			ResultSet r = ps.executeQuery();
-			r.next();
 			
-			return parseLine(r);
+			if(r.next()) {
+				return parseLine(r);
+			} else {
+				throw new SQLException("No such Hold Request.");
+			}
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			throw sql;
@@ -133,7 +161,7 @@ public class HoldRequest {
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static List<HoldRequest> getAllHoldRequests() throws SQLException {
+	public static List<HoldRequest> getAll() throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("SELECT * FROM HoldRequest");
 			ResultSet r = ps.executeQuery();
@@ -163,8 +191,8 @@ public class HoldRequest {
 	 */
 	private static HoldRequest parseLine(ResultSet r) throws SQLException {
 		int hid = r.getInt("hid");
-		Borrower bid = Borrower.getBorrower(r.getInt("bid"));
-		Book callNumber = Book.getBook(r.getInt("callNumber"));
+		Borrower bid = Borrower.get(r.getInt("bid"));
+		Book callNumber = Book.get(r.getInt("callNumber"));
 		Date issuedDate = r.getDate("issuedDate");
 		
 		return new HoldRequest(hid, bid, callNumber, issuedDate);
@@ -204,41 +232,6 @@ public class HoldRequest {
 	 */
 	public int getHid() {
 		return this.hid;
-	}
-
-	/**
-	 * Updates this object and the HoldRequest table
-	 * 
-	 * @param hid
-	 *            Primary key id number for this hold request
-	 * @throws SQLException
-	 *             if a database access error occurs; this method is called on a
-	 *             closed PreparedStatement or the SQL statement returns a
-	 *             ResultSet object
-	 */
-	public void setHid(int hid) throws SQLException {
-		try {
-			PreparedStatement ps = con.prepareStatement("UPDATE HoldRequest SET hid=? WHERE hid=?");
-			ps.setInt(2, this.hid);
-			
-			ps.setInt(1, hid);
-			
-			ps.executeUpdate();
-			con.commit();
-			ps.close();
-			
-			this.hid = hid;
-		} catch (SQLException sql) {
-			System.out.println("Message: " + sql.getMessage());
-			try {
-				// Undo
-				con.rollback();
-			} catch (SQLException sql2) {
-				System.out.println("Message: " + sql2.getMessage());
-				System.exit(-1);
-			}
-			throw sql;
-		}
 	}
 
 	/**

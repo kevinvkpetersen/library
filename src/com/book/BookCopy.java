@@ -43,6 +43,32 @@ public class BookCopy {
 	 }
 	
 	/**
+	 * Generates a new entry in the BookCopy table
+	 * 
+	 * @return A new BookCopy object with default values.
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	public static BookCopy generate(Book callNumber) throws SQLException {
+		int copyNo;
+		
+		try {
+			PreparedStatement ps = con.prepareStatement("SELECT MAX(copyNo) as maxCopyNo FROM BookCopy WHERE callNumber=?");
+			ps.setInt(1, callNumber.getCallNumber());
+			ResultSet r = ps.executeQuery();
+			
+			copyNo = (r.next() ? r.getInt("maxCopyNo") : 0);
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			throw sql;
+		}
+		
+		return add(callNumber, copyNo + 1, "in");
+	}
+	
+	/**
 	 * Add a copy to the BookCopy table.
 	 * 
 	 * @param callNumber
@@ -57,8 +83,7 @@ public class BookCopy {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	public static BookCopy addBookCopy(Book callNumber, int copyNo, String status,
-			String mainAuthor, String publisher, int year) throws SQLException {
+	private static BookCopy add(Book callNumber, int copyNo, String status) throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("INSERT INTO BookCopy VALUES (?,?,?)");
 			
@@ -99,17 +124,20 @@ public class BookCopy {
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static BookCopy getBookCopy(Book callNumber, int copyNo) throws SQLException {
+	public static BookCopy get(Book callNumber, int copyNo) throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("SELECT * FROM BookCopy WHERE callNumber=? AND copyNo=?");
 			ps.setInt(1, callNumber.getCallNumber());
 			ps.setInt(2, copyNo);
-			
+
 			ps.setMaxRows(1);
 			ResultSet r = ps.executeQuery();
-			r.next();
 			
-			return parseLine(r);
+			if(r.next()) {
+				return parseLine(r);
+			} else {
+				throw new SQLException("No such Copy of this Book.");
+			}
 		} catch (SQLException sql) {
 			System.out.println("Message: " + sql.getMessage());
 			throw sql;
@@ -126,7 +154,7 @@ public class BookCopy {
 	 *             closed PreparedStatement or the SQL statement does not return
 	 *             a ResultSet object
 	 */
-	public static List<BookCopy> getAllBookCopys() throws SQLException {
+	public static List<BookCopy> getAll() throws SQLException {
 		try {
 			PreparedStatement ps = con.prepareStatement("SELECT * FROM BookCopy");
 			ResultSet r = ps.executeQuery();
@@ -155,7 +183,7 @@ public class BookCopy {
 	 *             occurs or this method is called on a closed result set
 	 */
 	private static BookCopy parseLine(ResultSet r) throws SQLException {
-		Book callNumber = Book.getBook(r.getInt("callNumber"));
+		Book callNumber = Book.get(r.getInt("callNumber"));
 		int copyNo = r.getInt("copyNo");
 		String status = r.getString("status");
 		
@@ -200,82 +228,10 @@ public class BookCopy {
 	}
 
 	/**
-	 * Updates this object and the Book table
-	 * 
-	 * @param callNumber
-	 *            Book object this is a copy of
-	 * @throws SQLException
-	 *             if a database access error occurs; this method is called on a
-	 *             closed PreparedStatement or the SQL statement returns a
-	 *             ResultSet object
-	 */
-	public void setCallNumber(Book callNumber) throws SQLException {
-		try {
-			PreparedStatement ps = con.prepareStatement("UPDATE Book SET callNumber=? WHERE callNumber=? AND copyNo=?");
-			ps.setInt(2, this.callNumber.getCallNumber());
-			ps.setInt(3, this.copyNo);
-			
-			ps.setInt(1, callNumber.getCallNumber());
-			
-			ps.executeUpdate();
-			con.commit();
-			ps.close();
-			
-			this.callNumber = callNumber;
-		} catch (SQLException sql) {
-			System.out.println("Message: " + sql.getMessage());
-			try {
-				// Undo
-				con.rollback();
-			} catch (SQLException sql2) {
-				System.out.println("Message: " + sql2.getMessage());
-				System.exit(-1);
-			}
-			throw sql;
-		}
-	}
-
-	/**
 	 * @return This book's copy number
 	 */
 	public int getCopyNo() {
 		return this.copyNo;
-	}
-
-	/**
-	 * Updates this object and the Book table
-	 * 
-	 * @param copyNo
-	 *            This book's copy number
-	 * @throws SQLException
-	 *             if a database access error occurs; this method is called on a
-	 *             closed PreparedStatement or the SQL statement returns a
-	 *             ResultSet object
-	 */
-	public void setCopyNo(int copyNo) throws SQLException {
-		try {
-			PreparedStatement ps = con.prepareStatement("UPDATE Book SET copyNo=? WHERE callNumber=? AND copyNo=?");
-			ps.setInt(2, this.callNumber.getCallNumber());
-			ps.setInt(3, this.copyNo);
-			
-			ps.setInt(1, copyNo);
-			
-			ps.executeUpdate();
-			con.commit();
-			ps.close();
-			
-			this.copyNo = copyNo;
-		} catch (SQLException sql) {
-			System.out.println("Message: " + sql.getMessage());
-			try {
-				// Undo
-				con.rollback();
-			} catch (SQLException sql2) {
-				System.out.println("Message: " + sql2.getMessage());
-				System.exit(-1);
-			}
-			throw sql;
-		}
 	}
 
 	/**
