@@ -15,6 +15,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.Connection;
 import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -35,22 +36,18 @@ import com.date.DateParser;
 public class HoldRequest {
 	
 	private static Connection con = Main.con;
-	private JFrame frame = new JFrame("New Borrower");
+	private JFrame frmHoldRequest = new JFrame("New Borrower");
 	private JPanel contentPane = new JPanel();
 	private GridBagLayout gb = new GridBagLayout();
 	private GridBagConstraints c = new GridBagConstraints();
 	
 	private static final int FIELD_WIDTH = 30;
 	private final int LABEL_ALIGNMENT = GridBagConstraints.LINE_START;
-	
-	private JTextField titleField = new JTextField(FIELD_WIDTH);
 	private JTextField callNumberField = new JPasswordField(FIELD_WIDTH);
 	
 	private ActionListener submitAction = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 
-				
-				String title = titleField.getText(); 
 				int callNumber = Integer.parseInt(callNumberField.getText());
 				
 				Statement stmt = null;
@@ -67,14 +64,13 @@ public class HoldRequest {
 
 				
 				System.out.print("Hold Requested");
-				titleField.setText("");
 				callNumberField.setText("");
 	}
 	};
 	
 	private ActionListener cancelAction = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
-			frame.dispose();	
+			frmHoldRequest.dispose();	
 		}
 	};
 	private final JButton btnSubmitHold = new JButton("Submit Hold");
@@ -94,10 +90,11 @@ public class HoldRequest {
 	 * Builds the base frame and pane for the window
 	 */
 	private void initializePane() {
-		frame.setContentPane(contentPane);
-		frame.addWindowListener(new WindowAdapter() {
+		frmHoldRequest.setTitle("Hold Request");
+		frmHoldRequest.setContentPane(contentPane);
+		frmHoldRequest.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
-				frame.dispose();
+				frmHoldRequest.dispose();
 			}
 		});
 		
@@ -109,27 +106,13 @@ public class HoldRequest {
 	 * Builds the bid field and label and adds them to the window 
 	 */
 	private void addBid() {
-		// Place the bid label
-		JLabel lblBookTitle = new JLabel("Book Title:");
 		c.gridwidth = GridBagConstraints.RELATIVE;
 		c.insets = new Insets(10, 10, 5, 0);
 		c.anchor = LABEL_ALIGNMENT;
-		gb.setConstraints(lblBookTitle, c);
-		GridBagConstraints gbc_lblBookTitle = new GridBagConstraints();
-		gbc_lblBookTitle.insets = new Insets(0, 0, 0, 5);
-		gbc_lblBookTitle.gridx = 0;
-		gbc_lblBookTitle.gridy = 0;
-		contentPane.add(lblBookTitle, gbc_lblBookTitle);
 
 		// Place the text field for the bid
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.insets = new Insets(10, 0, 5, 10);
-		gb.setConstraints(titleField, c);
-		GridBagConstraints gbc_titleField = new GridBagConstraints();
-		gbc_titleField.insets = new Insets(0, 0, 0, 5);
-		gbc_titleField.gridx = 1;
-		gbc_titleField.gridy = 0;
-		contentPane.add(titleField, gbc_titleField);
 	}
 	
 	/**
@@ -164,7 +147,6 @@ public class HoldRequest {
 		btnSubmitHold.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 
-				String title = titleField.getText(); 
 				int callNumber = Integer.parseInt(callNumberField.getText());
 				
 				Statement stmt = null;
@@ -175,14 +157,19 @@ public class HoldRequest {
 				}
 				try {
 					String onhold = "on-hold";
-					stmt.executeUpdate("UPDATE BookCopy SET status=" + onhold + " WHERE callNumber= " + callNumber + " AND ");
+					/* 
+					PreparedStatement st = con.prepareStatement("UPDATE BookCopy SET status = ?, WHERE callNumber = ?");
+				        st.setString(1, "onHold");
+				        st.setInt(2, callNumber);
+				        st.executeUpdate();
+				        */
+					stmt.executeUpdate("UPDATE BookCopy SET status=" + onhold + " WHERE callNumber= " + callNumber + "");
 				} catch (SQLException e1) {
 					e1.printStackTrace();
 				}
 
 				
 				System.out.print("Hold Requested");
-				titleField.setText("");
 				callNumberField.setText("");
 	};
 		});
@@ -213,16 +200,16 @@ public class HoldRequest {
 	 */
 	public void displayWindow() {
 		// Size the window to obtain a best fit for the components
-		frame.pack();
+		frmHoldRequest.pack();
 		
 		// center the frame
-		Dimension d = frame.getToolkit().getScreenSize();
-		Rectangle r = frame.getBounds();
-		frame.setLocation(	(d.width - r.width) / 2,
+		Dimension d = frmHoldRequest.getToolkit().getScreenSize();
+		Rectangle r = frmHoldRequest.getBounds();
+		frmHoldRequest.setLocation(	(d.width - r.width) / 2,
 								(d.height - r.height) / 2);
 
 		// make the window visible
-		frame.setVisible(true);
+		frmHoldRequest.setVisible(true);
 
 		// place the cursor in the text field for the username
 	}
