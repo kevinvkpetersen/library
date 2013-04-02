@@ -72,7 +72,7 @@ public class Book {
 	 *             closed PreparedStatement or the SQL statement returns a
 	 *             ResultSet object
 	 */
-	public static Book add(int isbn, String title, String mainAuthor,
+	public static Book add(float isbn, String title, String mainAuthor,
 			String publisher, int year) throws SQLException {
 		int callNumber = generateKey();
 		

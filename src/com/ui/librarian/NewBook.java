@@ -54,6 +54,7 @@ public class NewBook {
 				
 				String yearString = yearField.getText();
 				int year = (yearString.isEmpty() ? 0 : Integer.parseInt(yearString));
+				
 				List<Book> bookList = Book.getAll();
 				Boolean exists = false;
 				Book FoundBook = null;
@@ -66,19 +67,13 @@ public class NewBook {
 				}
 				
 				if (exists) { 
-					BookCopy b = BookCopy.generate(FoundBook);
+					BookCopy b = BookCopy.add(FoundBook, "in");
 					System.out.println("A new copy of #" + b.getCallNumber() + " has been added!");
 				} 
 				else {
-				Book b = Book.generate();
-				b.setIsbn(isbn);
-				b.setTitle(title);
-				b.setMainAuthor(mainAuthor);
-				b.setPublisher(publisher);
-				b.setYear(year);
+				Book b = Book.add(isbn, title, mainAuthor, publisher, year);
 				System.out.println("Book #" + b.getCallNumber() + " added!");
 				}
-				
 
 				isbnField.setText("");
 				titleField.setText("");
