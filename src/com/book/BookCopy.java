@@ -147,6 +147,59 @@ public class BookCopy {
 	}
 
 	/**
+	 * Looks up all the entries in the BookCopy table that are checked out and
+	 * returns the corresponding objects in a list.
+	 * 
+	 * @return A List of BookCopy objects representing the entries of the
+	 *         BookCopy table that are checked out
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	public static List<BookCopy> getCheckedOut() throws SQLException {
+		try {
+			PreparedStatement ps = con.prepareStatement("SELECT * FROM BookCopy WHERE status='out' ORDER BY callNumber, copyNo");
+			ResultSet r = ps.executeQuery();
+			List<BookCopy> allBooks = new ArrayList<BookCopy>();
+			
+			while(r.next()) {
+				allBooks.add(parseLine(r));
+			}
+			
+			return allBooks;
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			throw sql;
+		}
+	}
+
+	/**
+	 * Looks up all the entries in the BookCopy table that are checked out and
+	 * returns the corresponding objects in a list.
+	 * 
+	 * @return A List of BookCopy objects representing the entries of the
+	 *         BookCopy table that are checked out
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	public static List<BookCopy> getOverdue() throws SQLException {
+		List<BookCopy> out = getCheckedOut();
+		List<BookCopy> overdue = new ArrayList<BookCopy>();
+		
+		for(BookCopy b : out) {
+			Borrowing borid = Borrowing.getLast(b);
+			if(DateParser.today().after(borid.getInDate())) {
+				overdue.add(b);
+			}
+		}
+		
+		return overdue;
+	}
+	
+	/**
 	 * Looks up all the entries in the BookCopy table and returns the corresponding
 	 * objects in a list.
 	 * 

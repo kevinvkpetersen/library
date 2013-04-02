@@ -10,6 +10,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -43,7 +44,11 @@ class ClerkTab extends JPanel {
 	};
 	private ActionListener overdueAction = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
-			new Overdue().displayWindow();
+			try {
+				new Overdue().displayWindow();
+			} catch (SQLException sql) {
+				System.out.println("Error building window");
+			}
 		}
 	};
 	

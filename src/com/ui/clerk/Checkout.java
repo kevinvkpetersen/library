@@ -69,6 +69,11 @@ public class Checkout {
 							System.out.println("Could not checkout book " + (i+1));
 						}
 					}
+					
+					if(!receipt.isEmpty()) {
+						System.out.println("To be returned on or before: " +
+								receipt.get(0).getInDate());
+					}
 				} else {
 					System.out.println("Borrower is cannot borrow books.");
 				}
@@ -117,14 +122,14 @@ public class Checkout {
 		// Place the bid label
 		JLabel label = new JLabel("Enter Borrower ID*: ");
 		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(10, 10, 10, 0);
+		c.insets = new Insets(10, 10, 15, 0);
 		c.anchor = LABEL_ALIGNMENT;
 		gb.setConstraints(label, c);
 		contentPane.add(label);
 
 		// Place the text field for the bid
 		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(10, 0, 10, 10);
+		c.insets = new Insets(10, 0, 15, 10);
 		gb.setConstraints(bidField, c);
 		contentPane.add(bidField);
 	}

@@ -32,7 +32,7 @@ import com.book.BookCopy;
  * @author Kevin Petersen
  */
 public class Return {
-	private JFrame frame = new JFrame("New Borrower");
+	private JFrame frame = new JFrame("Return");
 	private JPanel contentPane = new JPanel();
 	private GridBagLayout gb = new GridBagLayout();
 	private GridBagConstraints c = new GridBagConstraints();

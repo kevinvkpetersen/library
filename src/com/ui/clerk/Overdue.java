@@ -13,14 +13,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.sql.Date;
 import java.sql.SQLException;
+import java.util.List;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 
-import com.borrower.Borrower;
-import com.borrower.BorrowerType;
-import com.date.DateParser;
+import com.book.records.Borrowing;
 
 /**
  * This class implements a graphical login window to connect to the Oracle
@@ -29,63 +31,12 @@ import com.date.DateParser;
  * @author Kevin Petersen
  */
 public class Overdue {
-	private JFrame frame = new JFrame("New Borrower");
+	private JFrame frame = new JFrame("Overdue Books");
 	private JPanel contentPane = new JPanel();
 	private GridBagLayout gb = new GridBagLayout();
 	private GridBagConstraints c = new GridBagConstraints();
 	
-	private static final int FIELD_WIDTH = 30;
-	private final int LABEL_ALIGNMENT = GridBagConstraints.LINE_START;
-	
-	private JPasswordField passwordField = new JPasswordField(FIELD_WIDTH);
-	private JTextField nameField = new JTextField(FIELD_WIDTH);
-	private JTextField addressField = new JTextField(FIELD_WIDTH);
-	private JTextField phoneField = new JTextField(FIELD_WIDTH);
-	private JTextField emailField = new JTextField(FIELD_WIDTH);
-	private JTextField sinField = new JTextField(FIELD_WIDTH);
-	private JTextField expiryField = new JTextField(FIELD_WIDTH);
-	private JTextField typeField = new JTextField(FIELD_WIDTH);
-	
-	private ActionListener submitAction = new ActionListener() {
-		public void actionPerformed(ActionEvent e) {
-			try {
-				String password = String.valueOf(passwordField.getPassword()); 
-				String name = nameField.getText();
-				
-				String address = addressField.getText();
-				address = (address.isEmpty() ? null : address);
-				
-				String phoneString = phoneField.getText();
-				float phone = (phoneString.isEmpty() ? 0 : Float.parseFloat(phoneString));
-				
-				String emailAddress = emailField.getText();
-				emailAddress = (emailAddress.isEmpty() ? null : emailAddress);
-				
-				float sinOrStNo = Float.parseFloat(sinField.getText());
-				
-				String dateString = expiryField.getText();
-				Date expiryDate = (dateString.isEmpty() ? null : DateParser.convertToDate(dateString)); 
-				
-				BorrowerType type = BorrowerType.get(typeField.getText());
-				
-				Borrower b = Borrower.add(password, name, address, phone,
-						emailAddress, sinOrStNo, expiryDate, type);
-
-				System.out.println("Borrower #" + b.getBid() + " added!");
-				passwordField.setText("");
-				nameField.setText("");
-				addressField.setText("");
-				phoneField.setText("");
-				emailField.setText("");
-				sinField.setText("");
-				expiryField.setText("");
-				typeField.setText("");
-			} catch (SQLException sql) {
-				System.out.println("Could not add Borrower.");
-			}
-		}
-	};
-	private ActionListener cancelAction = new ActionListener() {
+	private ActionListener closeAction = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			frame.dispose();	
 		}
@@ -93,19 +44,13 @@ public class Overdue {
 	
 	/**
 	 * Builds the components and does any initialization for the window
+	 * @throws SQLException 
 	 */
-	public Overdue() {
+	public Overdue() throws SQLException {
 		initializePane();
-		addPassword();
-		addName();
-		addAddress();
-		addPhone();
-		addEmail();
-		addSin();
-		addExpiry();
-		addType();
-		addSubmitButton();
-		addCancelButton();
+		addLabels();
+		addList();
+		addCloseButton();
 	}
 	
 	/**
@@ -121,187 +66,104 @@ public class Overdue {
 		
 		contentPane.setLayout(gb);
 		contentPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+		c.fill = GridBagConstraints.HORIZONTAL;
 	}
 
 	/**
-	 * Builds the password field and label and adds them to the window 
+	 * Builds the column labels and adds them to the window 
 	 */
-	private void addPassword() {
-		// Place password label
-		JLabel label = new JLabel("Enter Password*: ");
+	private void addLabels() {
+		// Place call number label
+		JLabel callNumber = new JLabel("Call Number");
 		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(10, 10, 5, 0);
-		c.anchor = LABEL_ALIGNMENT;
-		gb.setConstraints(label, c);
-		contentPane.add(label);
-
-		// Place the password field
-		this.passwordField.setEchoChar('*');
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(10, 0, 5, 10);
-		gb.setConstraints(this.passwordField, c);
-		contentPane.add(this.passwordField);
-	}
-
-	/**
-	 * Builds the name field and label and adds them to the window 
-	 */
-	private void addName() {
-		// Place the name label
-		JLabel label = new JLabel("Enter Full Name*: ");
-		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(0, 10, 5, 0);
-		c.anchor = LABEL_ALIGNMENT;
-		gb.setConstraints(label, c);
-		contentPane.add(label);
-
-		// Place the text field for the name
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(this.nameField, c);
-		contentPane.add(this.nameField);
-	}
-	
-	/**
-	 * Builds the address field and label and adds them to the window 
-	 */
-	private void addAddress() {
-		// Place the address label
-		JLabel label = new JLabel("Enter Full Address: ");
-		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(0, 10, 5, 0);
-		c.anchor = LABEL_ALIGNMENT;
-		gb.setConstraints(label, c);
-		contentPane.add(label);
-
-		// Place the text field for the address
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(this.addressField, c);
-		contentPane.add(this.addressField);
-	}
-	
-	/**
-	 * Builds the phone field and label and adds them to the window 
-	 */
-	private void addPhone() {
-		// Place the phone label
-		JLabel label = new JLabel("Enter Phone Number: ");
-		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(0, 10, 5, 0);
-		c.anchor = LABEL_ALIGNMENT;
-		gb.setConstraints(label, c);
-		contentPane.add(label);
-
-		// Place the text field for the phone
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(this.phoneField, c);
-		contentPane.add(this.phoneField);
-	}
-	
-	/**
-	 * Builds the email field and label and adds them to the window 
-	 */
-	private void addEmail() {
-		// Place the email label
-		JLabel label = new JLabel("Enter Email Address: ");
-		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(0, 10, 5, 0);
-		c.anchor = LABEL_ALIGNMENT;
-		gb.setConstraints(label, c);
-		contentPane.add(label);
-
-		// Place the text field for the email
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(this.emailField, c);
-		contentPane.add(this.emailField);
-	}
-	
-	/**
-	 * Builds the sin field and label and adds them to the window 
-	 */
-	private void addSin() {
-		// Place the sin label
-		JLabel label = new JLabel("Enter Student Number or SIN*: ");
-		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(0, 10, 5, 0);
-		c.anchor = LABEL_ALIGNMENT;
-		gb.setConstraints(label, c);
-		contentPane.add(label);
-
-		// Place the text field for the sin
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(this.sinField, c);
-		contentPane.add(this.sinField);
-	}
-	
-	/**
-	 * Builds the expiry field and label and adds them to the window 
-	 */
-	private void addExpiry() {
-		// Place the expiry label
-		JLabel label = new JLabel("Enter Expiry Date (YYYY-MM-DD): ");
-		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(0, 10, 5, 0);
-		c.anchor = LABEL_ALIGNMENT;
-		gb.setConstraints(label, c);
-		contentPane.add(label);
-
-		// Place the text field for the expiry
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(this.expiryField, c);
-		contentPane.add(this.expiryField);
-	}
-	
-	/**
-	 * Builds the type field and label and adds them to the window 
-	 */
-	private void addType() {
-		// Place the type label
-		JLabel label = new JLabel("Enter Borrower Type*: ");
-		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(0, 10, 5, 0);
-		c.anchor = LABEL_ALIGNMENT;
-		gb.setConstraints(label, c);
-		contentPane.add(label);
-
-		// Place the text field for the type
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(0, 0, 5, 10);
-		gb.setConstraints(this.typeField, c);
-		contentPane.add(this.typeField);
-	}
-	
-	/**
-	 * Builds the submit button and adds it to the window 
-	 */
-	private void addSubmitButton() {
-		// Place the submit button
-		JButton button = new JButton("Submit");
-		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.insets = new Insets(5, 10, 10, 5);
+		c.insets = new Insets(10, 10, 5, 5);
 		c.anchor = GridBagConstraints.LINE_START;
-		gb.setConstraints(button, c);
-		contentPane.add(button);
-		button.addActionListener(this.submitAction);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		gb.setConstraints(callNumber, c);
+		contentPane.add(callNumber);
+	/*	
+		// Place copy number label
+		JLabel copyNo = new JLabel("Copy Number");
+		c.gridwidth = GridBagConstraints.RELATIVE;
+		c.insets = new Insets(10, 5, 5, 5);
+		c.anchor = GridBagConstraints.CENTER;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		gb.setConstraints(copyNo, c);
+		contentPane.add(copyNo);
+	*/	
+		// Place borrower id label
+		JLabel bid = new JLabel("Borrower ID");
+		c.gridwidth = GridBagConstraints.REMAINDER;
+		c.insets = new Insets(10, 5, 5, 10);
+		c.anchor = GridBagConstraints.LINE_END;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		gb.setConstraints(bid, c);
+		contentPane.add(bid);
+	}
+	
+	/**
+	 * Gets the list data and iteratively adds rows of data to the window
+	 * @throws SQLException 
+	 */
+	private void addList() throws SQLException  {
+		List<Borrowing> records = Borrowing.getOverdue();
+		
+		for(Borrowing borid : records) {
+			addRow(borid);
+		}
+	}
+
+	/**
+	 * Builds the builds a row of data and adds it to the window
+	 * 
+	 * @param borid
+	 *            The source of the data
+	 */
+	private void addRow(Borrowing borid) {
+		int callNumber = borid.getCallNumber().getCallNumber().getCallNumber();
+		int copyNo = borid.getCallNumber().getCopyNo();
+		int bid = borid.getBid().getBid();
+		
+		// Place call number label
+		JLabel call = new JLabel("" + callNumber);
+		c.gridwidth = GridBagConstraints.RELATIVE;
+		c.insets = new Insets(10, 10, 5, 5);
+		c.anchor = GridBagConstraints.CENTER;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		gb.setConstraints(call, c);
+		contentPane.add(call);
+/*
+		// Place copy number label
+		JLabel copy = new JLabel("" + copyNo);
+		c.gridwidth = GridBagConstraints.RELATIVE;
+		c.insets = new Insets(10, 5, 5, 5);
+		c.anchor = GridBagConstraints.CENTER;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		gb.setConstraints(copy, c);
+		contentPane.add(copy);
+*/
+		// Place borrower id label
+		JLabel borrower = new JLabel("" + bid);
+		c.gridwidth = GridBagConstraints.REMAINDER;
+		c.insets = new Insets(10, 5, 5, 10);
+		c.anchor = GridBagConstraints.CENTER;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		gb.setConstraints(borrower, c);
+		contentPane.add(borrower);
 	}
 	
 	/**
 	 * Builds the cancel button and adds it to the window 
 	 */
-	private void addCancelButton() {
+	private void addCloseButton() {
 		// Place the cancel button
-		JButton button = new JButton("Cancel");
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(5, 5, 10, 10);
+		JButton button = new JButton("Close");
+		c.gridwidth = GridBagConstraints.RELATIVE;
+		c.insets = new Insets(5, 10, 10, 10);
 		c.anchor = GridBagConstraints.LINE_END;
 		gb.setConstraints(button, c);
 		contentPane.add(button);
-		button.addActionListener(this.cancelAction);
+		button.addActionListener(this.closeAction);
 	}
 	
 	/**
@@ -319,8 +181,5 @@ public class Overdue {
 
 		// make the window visible
 		frame.setVisible(true);
-
-		// place the cursor in the text field for the password
-		this.passwordField.requestFocus();
 	}
 }

@@ -16,6 +16,7 @@ import com.Main;
 import com.book.Book;
 import com.book.BookCopy;
 import com.borrower.Borrower;
+import com.date.DateParser;
 
 /**
  * Representation of a borrow as described by Borrowing in tables.sql.
@@ -156,6 +157,96 @@ public class Borrowing {
 	}
 
 	/**
+	 * Looks up the entry for the given key in the Borrowing table and returns
+	 * the corresponding object.
+	 * 
+	 * @param borid
+	 *            The primary key used to look up the entry
+	 * @return A Borrowing object representing the entry with the given key
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	public static Borrowing getLast(BookCopy callNumber) throws SQLException {
+		Date recent;
+		int borid;
+		
+		try {
+			PreparedStatement ps = con.prepareStatement("SELECT MAX(outDate) as recent FROM Borrowing WHERE callNumber=? AND copyNo=?");
+			ps.setInt(1, callNumber.getCallNumber().getCallNumber());
+			ps.setInt(2, callNumber.getCopyNo());
+			ResultSet r = ps.executeQuery();
+			if(r.next()) {
+				recent = r.getDate("recent");
+			} else {
+				throw new SQLException("No such Borrow record.");
+			}
+			
+			ps = con.prepareStatement("SELECT borid FROM Borrowing WHERE callNumber=? AND copyNo=? AND outDate=?");
+			ps.setInt(1, callNumber.getCallNumber().getCallNumber());
+			ps.setInt(2, callNumber.getCopyNo());
+			ps.setDate(3, recent);
+			r = ps.executeQuery();
+			if(r.next()) {
+				borid = r.getInt("borid");
+			} else {
+				throw new SQLException("No such Borrow record.");
+			}
+		} catch (SQLException sql) {
+			System.out.println("Message: " + sql.getMessage());
+			throw sql;
+		}
+		
+		return Borrowing.get(borid);
+	}
+	
+	/**
+	 * Looks up all the entries in the Borrowing table and returns the corresponding
+	 * objects in a list.
+	 * 
+	 * @return A List of Borrowing objects representing the entries of the Borrowing table
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	public static List<Borrowing> getCheckedOut() throws SQLException {
+		List<BookCopy> outBooks = BookCopy.getCheckedOut();
+		List<Borrowing> records = new ArrayList<Borrowing>();
+		
+		for(BookCopy b : outBooks) {
+			records.add(getLast(b));
+		}
+		
+		return records;
+	}
+
+	/**
+	 * Looks up all the entries in the Borrowing table and returns the corresponding
+	 * objects in a list.
+	 * 
+	 * @return A List of Borrowing objects representing the entries of the Borrowing table
+	 * @throws SQLException
+	 *             if a database access error occurs; this method is called on a
+	 *             closed PreparedStatement or the SQL statement does not return
+	 *             a ResultSet object
+	 */
+	public static List<Borrowing> getOverdue() throws SQLException {
+		List<BookCopy> outBooks = BookCopy.getCheckedOut();
+		List<Borrowing> overdue = new ArrayList<Borrowing>();
+		
+		for(BookCopy b : outBooks) {
+			Borrowing borid = getLast(b);
+			if(DateParser.today().after(borid.getInDate())) {
+				overdue.add(borid);
+			}
+		}
+		
+		return overdue;
+	}
+
+	/**
 	 * Looks up all the entries in the Borrowing table and returns the corresponding
 	 * objects in a list.
 	 * 
@@ -181,7 +272,7 @@ public class Borrowing {
 			throw sql;
 		}
 	}
-	
+
 	/**
 	 * Reads the data from the current row in the result set and generates the
 	 * corresponding Borrowing object
@@ -233,51 +324,6 @@ public class Borrowing {
 			}
 			throw sql;
 		}
-	}
-
-	/**
-	 * Looks up the entry for the given key in the Borrowing table and returns
-	 * the corresponding object.
-	 * 
-	 * @param borid
-	 *            The primary key used to look up the entry
-	 * @return A Borrowing object representing the entry with the given key
-	 * @throws SQLException
-	 *             if a database access error occurs; this method is called on a
-	 *             closed PreparedStatement or the SQL statement does not return
-	 *             a ResultSet object
-	 */
-	public static Borrowing getLast(BookCopy callNumber) throws SQLException {
-		Date recent;
-		int borid;
-		
-		try {
-			PreparedStatement ps = con.prepareStatement("SELECT MAX(outDate) as recent FROM Borrowing WHERE callNumber=? AND copyNo=?");
-			ps.setInt(1, callNumber.getCallNumber().getCallNumber());
-			ps.setInt(2, callNumber.getCopyNo());
-			ResultSet r = ps.executeQuery();
-			if(r.next()) {
-				recent = r.getDate("recent");
-			} else {
-				throw new SQLException("No such Borrow record.");
-			}
-			
-			ps = con.prepareStatement("SELECT borid FROM Borrowing WHERE callNumber=? AND copyNo=? AND outDate=?");
-			ps.setInt(1, callNumber.getCallNumber().getCallNumber());
-			ps.setInt(2, callNumber.getCopyNo());
-			ps.setDate(3, recent);
-			r = ps.executeQuery();
-			if(r.next()) {
-				borid = r.getInt("borid");
-			} else {
-				throw new SQLException("No such Borrow record.");
-			}
-		} catch (SQLException sql) {
-			System.out.println("Message: " + sql.getMessage());
-			throw sql;
-		}
-		
-		return Borrowing.get(borid);
 	}
 
 	/**
