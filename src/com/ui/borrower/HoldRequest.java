@@ -21,6 +21,7 @@ import java.sql.Statement;
 
 import javax.swing.*;
 
+import com.Main;
 import com.borrower.Borrower;
 import com.borrower.BorrowerType;
 import com.date.DateParser;
@@ -33,7 +34,7 @@ import com.date.DateParser;
  */
 public class HoldRequest {
 	
-	private Connection con;
+	private static Connection con = Main.con;
 	private JFrame frame = new JFrame("New Borrower");
 	private JPanel contentPane = new JPanel();
 	private GridBagLayout gb = new GridBagLayout();
@@ -173,7 +174,8 @@ public class HoldRequest {
 					e1.printStackTrace();
 				}
 				try {
-					stmt.executeQuery("UPDATE BookCopy SET status= onHold WHERE callNumber= " + callNumber + "");
+					String onhold = "on-hold";
+					stmt.executeUpdate("UPDATE BookCopy SET status=" + onhold + " WHERE callNumber= " + callNumber + " AND ");
 				} catch (SQLException e1) {
 					e1.printStackTrace();
 				}
